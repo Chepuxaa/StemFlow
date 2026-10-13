@@ -20,9 +20,11 @@ from mutagen.mp4 import MP4
 from webview.dom import DOMEventHandler
 from file_output import BACKUP_FOLDER
 from app_paths import DATA_DIR, MODEL_DIR, RESOURCE_DIR, cleanup_run_directory, worker_command
-from scripts.download_model import (DownloadCancelled, checkpoint_fingerprint,
+from scripts.download_model import (model_target, DownloadCancelled, checkpoint_fingerprint,
                                     download_checkpoint, model_manifest, verify_checkpoint)
 import audio_runtime
+from stem_palette import DEFAULT_COLORS, validate_colors
+from worker_errors import worker_error
 
 ROOT = RESOURCE_DIR
 EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a", ".mp4", ".aif", ".aiff", ".ogg", ".opus"}
@@ -40,7 +42,9 @@ class DesktopAPI:
         self._worker_script = Path(worker_script) if worker_script else ROOT / "separate.py"
         self._jobs = []
         self._covers = {}
-        self._settings = {"keep_wavs": False, "chunk_seconds": 11, "device": "auto", "language": "en", "output_mode": "output", "output_directory": ""}
+        self._settings = {"keep_wavs": False, "watermark_cover": True, "chunk_seconds": 11, "device": "auto", "language": "en", "output_mode": "output", "output_directory": ""}
+        self._settings['stem_colors'] = DEFAULT_COLORS.copy()
+        self._settings['cpu_fast'] = True
         self._notice = ""
         self._model_cancel = threading.Event()
         self._model_thread = None
@@ -68,6 +72,16 @@ class DesktopAPI:
                         job.update(status="pending", stage="waiting", progress=0)
             except (ValueError, KeyError, TypeError):
                 self._notice = "Не удалось восстановить предыдущую очередь."
+
+        try:
+            self._settings['stem_colors'] = validate_colors(self._settings['stem_colors'])
+        except ValueError:
+            self._settings['stem_colors'] = DEFAULT_COLORS.copy()
+        legacy_key = 'overlap_cpu' if self._settings['device'] == 'cpu' else 'overlap_cuda'
+        overlap = self._settings.get('overlap_percent', self._settings.get(legacy_key, 75))
+        self._settings['overlap_percent'] = overlap if overlap in (50, 75) else 75
+        self._settings.pop('overlap_cuda', None)
+        self._settings.pop('overlap_cpu', None)
 
     def _save(self):
         self._state_file.parent.mkdir(parents=True, exist_ok=True)
@@ -101,7 +115,7 @@ class DesktopAPI:
         return self.get_state()
 
     def _run_model_task(self, download):
-        target = MODEL_DIR / 'ver2.ckpt'
+        target = model_target()
         manifest = model_manifest()
         try:
             if download and not verify_checkpoint(target, manifest, self._model_progress, self._model_cancel):
@@ -229,7 +243,7 @@ class DesktopAPI:
                 self._save()
         return self.get_state()
 
-    def set_settings(self, keep_wavs, chunk_seconds, device='auto', output_mode='output'):
+    def set_settings(self, keep_wavs, chunk_seconds, device='auto', output_mode='output', watermark_cover=True, stem_colors=None, overlap_percent=75, cpu_fast=True):
         with self._lock:
             if self._busy:
                 raise ValueError("Settings can be changed after stopping the queue." if self._settings['language'] == 'en' else "Настройки можно менять после остановки очереди.")
@@ -240,8 +254,12 @@ class DesktopAPI:
                 raise ValueError('Select Auto, CUDA or CPU.' if self._settings['language'] == 'en' else 'Выбери Auto, CUDA или CPU.')
             if output_mode not in ('output', 'replace'):
                 raise ValueError('Unknown output mode.')
+            colors = validate_colors(self._settings['stem_colors'] if stem_colors is None else stem_colors)
+            if overlap_percent not in (50, 75):
+                raise ValueError('Choose 50% or 75% overlap.')
             self._settings.update(keep_wavs=bool(keep_wavs), chunk_seconds=chunk_seconds,
-                                  device=device, output_mode=output_mode)
+                                  device=device, output_mode=output_mode, watermark_cover=bool(watermark_cover), stem_colors=colors,
+                                  overlap_percent=overlap_percent, cpu_fast=bool(cpu_fast))
             self._save()
         return self.get_state()
 
@@ -268,7 +286,7 @@ class DesktopAPI:
     def start(self):
         with self._lock:
             try:
-                model_ready = self._model['stage'] == 'ready' and self._model_fingerprint == checkpoint_fingerprint(MODEL_DIR / 'ver2.ckpt')
+                model_ready = self._model['stage'] == 'ready' and self._model_fingerprint == checkpoint_fingerprint(model_target())
             except OSError:
                 model_ready = False
             if not model_ready:
@@ -321,6 +339,12 @@ class DesktopAPI:
                                               '--chunk-seconds', str(settings['chunk_seconds'])])
                     if not settings['keep_wavs']:
                         command.append('--discard-wavs')
+                    if settings['watermark_cover']:
+                        command.append('--watermark-cover')
+                    command.extend(['--stem-colors', *settings['stem_colors']])
+                    command.extend(['--overlap', str(settings['overlap_percent'])])
+                    if settings['cpu_fast']:
+                        command.append('--cpu-fast')
                     if settings['output_mode'] == 'replace':
                         command.append('--replace-original')
                     else:
@@ -388,18 +412,25 @@ class DesktopAPI:
                         done = True
                         break
                     if payload['stage'] == 'failed':
-                        job.update(status='failed', error=payload.get('error') or '\n'.join(tail)[-5000:])
+                        job.update(status='failed', error=payload.get('error') or worker_error(tail, settings['language']))
                         break
             if job['status'] == 'running':
                 job.update(status='cancelled' if self._stop.is_set() else 'failed',
                            stage='cancelled' if self._stop.is_set() else 'failed',
-                           error='' if self._stop.is_set() else '\n'.join(tail)[-5000:])
+                           error='' if self._stop.is_set() else worker_error(tail, settings['language']))
         except (OSError, ValueError) as exc:
             self._terminate(process)
             with self._lock:
                 job.update(status='cancelled' if self._stop.is_set() else 'failed',
                            stage='cancelled' if self._stop.is_set() else 'failed', error=str(exc))
         finally:
+            if job.get('status') == 'failed' and tail:
+                try:
+                    report_dir = DATA_DIR / 'reports'
+                    report_dir.mkdir(parents=True, exist_ok=True)
+                    (report_dir / f"worker-{job['id']}.log").write_text('\n'.join(tail) + '\n', encoding='utf-8')
+                except OSError:
+                    pass
             if run_directory is not None and (self._stop.is_set() or process.poll() is not None):
                 cleanup_run_directory(run_directory)
             with self._lock:
@@ -489,7 +520,7 @@ class DesktopAPI:
             pass
         cpu_info = {'cpu_name': cpu_name, 'ram_gib': ram_gib}
         try:
-            # Probe the same PyTorch environment as the worker, including a CUDA operation.
+            # Probe the worker's native CUDA driver and TensorRT RTX runtime.
             result = subprocess.run(worker_command(['--probe-device']),
                                     capture_output=True, text=True, timeout=20,
                                     creationflags=NO_WINDOW, check=True)
@@ -509,6 +540,11 @@ def create_app_window(api):
                                   frameless=True, easy_drag=False, shadow=True,
                                   background_color="#101010")
     api._window = window
+    def shown():
+        if os.name == 'nt':
+            from window_chrome import enable_taskbar_minimize
+            enable_taskbar_minimize(window.native.Handle.ToInt64())
+    window.events.shown += shown
     window.events.closing += api.shutdown
     return window
 
@@ -529,7 +565,8 @@ def main():
         zone.on("drop", DOMEventHandler(dropped, prevent_default=True, stop_propagation=True))
 
     window.events.loaded += loaded
-    webview.start(gui="edgechromium", storage_path=str(DATA_DIR / 'webview'), private_mode=True)
+    webview.start(gui="edgechromium", storage_path=str(DATA_DIR / 'webview'), private_mode=True,
+                  icon=str(ROOT / 'ui/assets/icon.ico'))
 
 
 if __name__ == "__main__":

@@ -15,12 +15,13 @@ import shutil
 from audio_runtime import get_ffmpeg_exe
 import numpy as np
 import soundfile as sf
-import torch
+from cuda_runtime import CudaError, probe_device
 from model_runtime import load_model, infer, resolve_device, ModelCache
 from file_output import replace_original, fingerprint
 from app_paths import DATA_DIR, TEMP_ROOT, RESOURCE_DIR, MODEL_DIR
 
 from ni_stem import STEMS, export_stem
+from stem_palette import DEFAULT_COLORS, validate_colors
 
 ROOT = RESOURCE_DIR
 RATE = 44100
@@ -40,7 +41,9 @@ def positive(value):
     return value
 
 
-def separate_audio(audio, chunk_seconds, requested, progress, cache=None):
+def separate_audio(audio, chunk_seconds, requested, progress, cache=None, overlap_percent=75, cpu_fast=False):
+    if overlap_percent not in (50, 75):
+        raise ValueError('Supported overlap: 50% or 75%.')
     device = 'cpu' if cache and cache.force_cpu and requested == 'auto' else resolve_device(requested)
     fallback_reason = None
     if requested == 'auto' and device == 'cpu':
@@ -51,23 +54,23 @@ def separate_audio(audio, chunk_seconds, requested, progress, cache=None):
         model = None
         started = time.perf_counter()
         try:
-            if target.startswith('cuda'):
-                torch.cuda.reset_peak_memory_stats()
             reuse = cache is not None and cache.model is not None and cache.device == target
             event('separate' if reuse else 'load', 10 if reuse else 8,
                   device=target, model_reused=reuse)
             if cache is None:
-                model, config = load_model(target)
+                model, config = load_model(target, chunk_seconds, cpu_fast=cpu_fast) if cpu_fast else load_model(target, chunk_seconds)
                 reused = False
             else:
-                model, config, reused = cache.get(target)
+                model, config, reused = cache.get(target, chunk_seconds, cpu_fast=cpu_fast)
             loaded = time.perf_counter()
+            # Queue cache keeps the original config, including after GPU -> CPU fallback.
+            config = {**config, 'inference': {**config['inference'], 'num_overlap': 4 if overlap_percent == 75 else 2}}
             stems = infer(model, config, audio, chunk_seconds, progress)
-            if target.startswith('cuda'):
-                torch.cuda.synchronize()
             return stems, 0.0 if reused else loaded - started, time.perf_counter() - loaded, (
-                torch.cuda.max_memory_allocated() / 1024**3 if target.startswith('cuda') else 0.0)
+                0.0)
         finally:
+            if model is not None and cache is None:
+                model.close()
             del model
 
     started = time.perf_counter()
@@ -77,7 +80,7 @@ def separate_audio(audio, chunk_seconds, requested, progress, cache=None):
         result = attempt(device)
     except RuntimeError as exc:
         message = str(exc).lower()
-        cuda_error = isinstance(exc, torch.cuda.OutOfMemoryError) or any(
+        cuda_error = isinstance(exc, CudaError) or any(
             name in message for name in ('cuda', 'cudnn', 'cublas', 'nvidia'))
         if requested != 'auto' or not device.startswith('cuda') or not cuda_error:
             raise
@@ -89,10 +92,6 @@ def separate_audio(audio, chunk_seconds, requested, progress, cache=None):
             cache.clear()
             cache.force_cpu = True
         gc.collect()
-        try:
-            torch.cuda.empty_cache()
-        except RuntimeError:
-            pass
         device = 'cpu'
         print(f'CUDA failed; restarting the entire track on CPU: {fallback_reason}', flush=True)
         event('load', 8, device=device, fallback_reason=fallback_reason)
@@ -103,7 +102,11 @@ def separate_audio(audio, chunk_seconds, requested, progress, cache=None):
                    'model_load_seconds': load_seconds, 'separation_seconds': separation_seconds,
                    'model_reused': load_seconds == 0,
                    'peak_allocated_vram_gib': peak,
-                   'gpu': torch.cuda.get_device_name(0) if device.startswith('cuda') else None}
+                   'backend': 'TensorRT RTX' if device.startswith('cuda') else 'ONNX Runtime',
+                   'gpu': probe_device()['name'] if device.startswith('cuda') else None,
+                   'overlap_percent': overlap_percent,
+                   'cpu_fast': bool(cpu_fast and device == 'cpu'),
+                   'overlap': 4 if overlap_percent == 75 else 2}
 
 
 def main():
@@ -113,22 +116,30 @@ def main():
     parser.add_argument("--seconds", type=positive, default=60, help="0 = full track")
     parser.add_argument("--chunk-seconds", type=positive, default=11)
     parser.add_argument('--device', choices=('auto', 'cuda', 'cpu'), default='auto')
+    parser.add_argument('--overlap', type=int, choices=(50, 75), default=75)
+    parser.add_argument('--cpu-fast', action='store_true', help='Use locally converted INT8 linear layers on CPU')
     parser.add_argument('--worker', action='store_true', help='Read queue jobs as JSON lines on stdin')
     parser.add_argument('--replace-original', action='store_true')
+    parser.add_argument('--watermark-cover', action='store_true')
+    parser.add_argument('--stem-colors', nargs=4, metavar='COLOR', help='Drums, Bass, Other, Vocals as #RRGGBB')
     parser.add_argument('--output-dir', type=Path, help='User-selected destination for finished stems')
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--codec", choices=("aac", "alac"), default="aac",
                         help="AAC for Windows Traktor; ALAC is an optional compatibility trial")
     parser.add_argument("--discard-wavs", action="store_true", help="Remove intermediate WAVs after a successful export")
     args = parser.parse_args()
+    try:
+        args.stem_colors = validate_colors(DEFAULT_COLORS if args.stem_colors is None else args.stem_colors)
+    except ValueError as exc:
+        parser.error(str(exc))
     if not getattr(sys, 'frozen', False) and Path(sys.prefix).resolve() != (ROOT / ".venv").resolve():
         parser.error("Run with .\\.venv\\Scripts\\python.exe separate.py")
     try:
         resolve_device(args.device)
     except RuntimeError as exc:
         parser.error(str(exc))
-    if not 2 <= args.chunk_seconds <= 11:
-        parser.error("--chunk-seconds must be between 2 and 11")
+    if args.chunk_seconds not in (6, 11):
+        parser.error("--chunk-seconds must be 6 or 11")
     if not args.replace_original and args.output_dir is None:
         parser.error('Choose a destination with --output-dir, or use --replace-original')
     if args.worker:
@@ -207,9 +218,10 @@ def _process_track(args, cache, directory):
     audio, rate = sf.read(master_path, dtype="float32", always_2d=True)
     if not len(audio) or not np.isfinite(audio).all():
         raise ValueError("Input contains no usable finite audio")
-    checkpoint = MODEL_DIR / 'ver2.ckpt'
+    from scripts.download_model import model_target
+    checkpoint = model_target()
     if not checkpoint.is_file():
-        raise FileNotFoundError(f'Weights missing: {checkpoint}. Run scripts/download_model.py or StemFlow-worker.exe --download-model.')
+        raise FileNotFoundError(f'Weights missing: {checkpoint}. Run scripts/download_model.py or StemFlow.exe --download-model.')
     print(f"Audio: {len(audio) / rate:.2f}s; loading MelBand 4-stem SYH v2", flush=True)
     started = time.perf_counter()
     event("load", 8, audio_seconds=len(audio) / rate)
@@ -218,7 +230,8 @@ def _process_track(args, cache, directory):
         event("separate", 10 + 75 * completed / total,
               completed_chunks=completed, total_chunks=total)
 
-    stems, device_report = separate_audio(audio, args.chunk_seconds, args.device, chunk_finished, cache)
+    stems, device_report = separate_audio(audio, args.chunk_seconds, args.device, chunk_finished, cache,
+                                          overlap_percent=args.overlap, cpu_fast=args.cpu_fast)
     elapsed = time.perf_counter() - started
     levels = {}
     event("write", 86)
@@ -234,7 +247,8 @@ def _process_track(args, cache, directory):
     print(f"Writing {args.codec.upper()} NI Stem container...", flush=True)
     event("encode", 90)
     destination = directory if args.replace_original else args.output_dir.expanduser().resolve()
-    output = export_stem(directory, title, codec=args.codec, source_track=args.track, destination=destination)
+    output = export_stem(directory, title, codec=args.codec, source_track=args.track,
+                         destination=destination, watermark=args.watermark_cover, stem_colors=args.stem_colors)
     backup = None
     if args.replace_original:
         event('publish', 96)
@@ -245,8 +259,9 @@ def _process_track(args, cache, directory):
               "input": str(args.track.resolve()) if args.track else "synthetic technical test",
               "audio_seconds": len(audio) / rate, "start_seconds": args.start,
               "separation_and_load_seconds": elapsed,
-              "chunk_seconds": args.chunk_seconds, "batch_size": 1, "overlap": 4,
+              "chunk_seconds": args.chunk_seconds, "batch_size": 1,
               "export_codec": args.codec,
+              "stem_colors": args.stem_colors,
               "aac_target_bitrates_kbps": [320, 320, 320, 320, 320] if args.codec == "aac" else None,
               "common_output_gain": gain, "normalization": False, "limiter": False,
               "stem_peaks_before_gain": levels,
@@ -268,5 +283,5 @@ def _process_track(args, cache, directory):
 if __name__ == "__main__":
     try:
         main()
-    except torch.cuda.OutOfMemoryError:
-        raise SystemExit("CUDA memory exhausted. Retry with --chunk-seconds 6; partial output was preserved.")
+    except CudaError as exc:
+        raise SystemExit(f"TensorRT GPU processing failed: {exc}")

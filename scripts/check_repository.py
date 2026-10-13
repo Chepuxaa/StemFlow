@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def source_files():
-    roots = [ROOT, ROOT / 'scripts', ROOT / 'ui', ROOT / 'config', ROOT / 'packaging', ROOT / '.github', ROOT / 'docs', ROOT / 'vendor']
+    roots = [ROOT, ROOT / 'scripts', ROOT / 'tests', ROOT / 'ui', ROOT / 'config', ROOT / 'packaging', ROOT / '.github', ROOT / 'docs']
     for directory in roots:
         if not directory.exists():
             continue
@@ -35,15 +35,11 @@ def main():
             ast.parse(path.read_text(encoding='utf-8'), filename=str(path))
         if path.suffix == '.svg':
             ET.parse(path)
-    manifest = json.loads((ROOT / 'vendor/msst/source.json').read_text())
-    for relative, expected in manifest['files'].items():
-        actual = hashlib.sha256((ROOT / 'vendor/msst' / relative).read_bytes()).hexdigest()
-        assert actual == expected, f'Vendor hash mismatch: {relative}'
     model = json.loads((ROOT / 'config/model.json').read_text())
     assert hashlib.sha256((ROOT / 'config/melband4.yaml').read_bytes()).hexdigest() == model['config_sha256']
-    for relative in ['LICENSE', 'THIRD_PARTY_NOTICES.md', 'ui/assets/fonts/OFL.txt', 'ui/assets/logo.svg', 'requirements/app.lock.txt']:
+    for relative in ['LICENSE', 'THIRD_PARTY_NOTICES.md', 'packaging/licenses/MSST/LICENSE', 'ui/assets/fonts/OFL.txt', 'ui/assets/logo.svg', 'requirements/app.lock.txt']:
         assert (ROOT / relative).is_file(), relative
-    print('Repository source, model config, assets and vendor hashes: OK')
+    print('Repository source, model config, assets and license files: OK')
 
 
 if __name__ == '__main__':

@@ -82,8 +82,23 @@ function render(state) {
   const actualDevice = running && running.device ? (running.device.startsWith('cuda') ? 'CUDA' : 'CPU') : null;
   $('run-label').textContent = state.stopping ? t('queueStopping') : state.busy ? (actualDevice ? t('processing',{device:actualDevice}) : t('preparing')) : pending ? t('queueReady') : t('ready');
   $('keep-wavs').checked = state.settings.keep_wavs;
+  $('watermark-cover').checked = state.settings.watermark_cover ?? true;
+  $('watermark-cover').disabled = state.busy;
+  const palette = state.settings.stem_colors || defaultStemColors;
+  stemNames.forEach((name, index) => {
+    const input = $('color-' + name);
+    if (document.activeElement !== input) input.value = palette[index];
+    input.disabled = state.busy;
+    $('pick-' + name).disabled = state.busy;
+    previewStemColor(name);
+  });
+  $('reset-stem-colors').disabled = state.busy;
   $('keep-wavs').disabled = state.busy; $('chunk').disabled = state.busy;
   $('chunk').value = state.settings.chunk_seconds;
+  $('overlap').value = state.settings.overlap_percent ?? 75;
+  $('overlap').disabled = state.busy;
+  $('cpu-fast').checked = state.settings.cpu_fast ?? true;
+  $('cpu-fast').disabled = state.busy;
   $('device').value = state.settings.device || 'auto';
   $('device').disabled = state.busy;
   $('output-mode').value = state.settings.output_mode || 'output';
@@ -117,7 +132,7 @@ function render(state) {
     row.querySelector('.track-name').title = job.path;
     const info = row.querySelector('small'); info.className = '';
     if (job.status === 'failed') { info.textContent = job.error || t('failure'); info.className = 'job-error'; }
-    else if (job.report) { info.textContent = t('elapsed',{seconds:Math.round(job.report.separation_and_load_seconds)}) + ' · ' + (job.report.device === 'cpu' ? 'CPU' : t('memoryUsed',{memory:job.report.peak_allocated_vram_gib.toFixed(2)})); }
+    else if (job.report) { info.textContent = t('elapsed',{seconds:Math.round(job.report.separation_and_load_seconds)}) + ' · ' + (job.report.device === 'cpu' ? 'CPU' : job.report.peak_allocated_vram_gib > 0 ? t('memoryUsed',{memory:job.report.peak_allocated_vram_gib.toFixed(2)}) : 'GPU'); }
     else { info.textContent = job.status === 'running' ? `MelBand 4-stem v2 · ${actualDevice || t('preparing')}` : job.path.split(/[\\/]/).slice(-2,-1).join(''); }
     row.querySelector('.status').textContent = (translations[language]['stage_' + job.stage] || job.stage) + (job.status === 'running' ? ` ${Math.floor(job.progress)}%` : '');
     row.querySelector('.job-progress').hidden = !['running','done'].includes(job.status);
@@ -158,7 +173,26 @@ function showPage(name) {
 }
 $('nav-generator').onclick = () => showPage('generator');
 $('nav-settings').onclick = () => showPage('settings');
-function settings() { call('set_settings',$('keep-wavs').checked,Number($('chunk').value),$('device').value,$('output-mode').value); }
+const stemNames = ['drums','bass','other','vocals'];
+const defaultStemColors = ['#009E73','#D55E00','#CC79A7','#56B4E9'];
+function previewStemColor(name) {
+  const color = $('color-' + name).value;
+  $('pick-' + name).querySelector('.color-swatch').style.backgroundColor = color;
+  $('hex-' + name).textContent = color.toUpperCase();
+  $('preview-' + name).style.backgroundColor = color;
+}
+function settings() { call('set_settings',$('keep-wavs').checked,Number($('chunk').value),$('device').value,$('output-mode').value,$('watermark-cover').checked,stemNames.map(name => $('color-' + name).value),Number($('overlap').value),$('cpu-fast').checked); }
+$('cpu-fast').onchange = settings;
+$('overlap').onchange = settings;
+stemNames.forEach(name => {
+  $('pick-' + name).onclick = () => openStemPicker(name);
+  previewStemColor(name);
+});
+$('reset-stem-colors').onclick = () => {
+  stemNames.forEach((name,index) => { $('color-' + name).value = defaultStemColors[index]; previewStemColor(name); });
+  settings();
+};
+$('watermark-cover').onchange = settings;
 $('keep-wavs').onchange = settings; $('chunk').onchange = settings;
 $('device').onchange = settings;
 $('output-mode').onchange = settings;

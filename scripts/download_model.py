@@ -1,4 +1,4 @@
-"""Download the pinned checkpoint and verify its size and SHA-256."""
+"""Download the pinned ONNX bundle and verify every file's size and SHA-256."""
 
 import argparse
 import hashlib
@@ -14,6 +14,7 @@ import uuid
 if __package__ in (None, ''):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app_paths import MODEL_DIR, RESOURCE_DIR
+from download_tls import download_context
 
 
 class DownloadCancelled(Exception):
@@ -24,7 +25,20 @@ def model_manifest():
     return json.loads((RESOURCE_DIR / 'config/model.json').read_text())
 
 
+def model_target():
+    return MODEL_DIR / model_manifest().get('weights_file', 'ver2.ckpt')
+
+
 def checkpoint_fingerprint(target):
+    manifest = model_manifest()
+    if manifest.get('files') and Path(target).parent == MODEL_DIR:
+        return tuple((file['name'], checkpoint_fingerprint_file(MODEL_DIR / file['name'])) for file in manifest['files'])
+    return checkpoint_fingerprint_file(target)
+
+
+def checkpoint_fingerprint_file(target):
+    if not Path(target).is_file():
+        return None
     stat = Path(target).stat()
     return stat.st_size, stat.st_mtime_ns
 
@@ -35,6 +49,16 @@ def _check_cancel(cancel):
 
 
 def verify_checkpoint(target, manifest, progress=lambda **event: None, cancel=None):
+    if manifest.get('files'):
+        offset = 0
+        for file in manifest['files']:
+            def report(**event):
+                progress(**{**event, 'received': offset + event['received'], 'total': manifest['weights_bytes']})
+            single = {'weights_bytes': file['bytes'], 'weights_sha256': file['sha256']}
+            if not verify_checkpoint(Path(target).parent / file['name'], single, report, cancel):
+                return False
+            offset += file['bytes']
+        return True
     target = Path(target)
     _check_cancel(cancel)
     if not target.is_file():
@@ -55,6 +79,17 @@ def verify_checkpoint(target, manifest, progress=lambda **event: None, cancel=No
 
 def download_checkpoint(target, manifest, progress=lambda **event: None, cancel=None):
     """Publish only verified bytes; cancellation removes only this task's partial file."""
+    if manifest.get('files'):
+        offset = 0
+        for file in manifest['files']:
+            single = {'weights_bytes': file['bytes'], 'weights_sha256': file['sha256'], 'weights_url': file['url']}
+            destination = Path(target).parent / file['name']
+            def report(**event):
+                progress(**{**event, 'received': offset + event['received'], 'total': manifest['weights_bytes']})
+            if not verify_checkpoint(destination, single, report, cancel):
+                download_checkpoint(destination, single, report, cancel)
+            offset += file['bytes']
+        return Path(target)
     target = Path(target)
     target.parent.mkdir(parents=True, exist_ok=True)
     total = manifest['weights_bytes']
@@ -66,7 +101,7 @@ def download_checkpoint(target, manifest, progress=lambda **event: None, cancel=
         _check_cancel(cancel)
         request = urllib.request.Request(manifest['weights_url'], headers={'User-Agent': 'StemFlow/1.0'})
         progress(stage='downloading', received=0, total=total, speed=0)
-        with urllib.request.urlopen(request, timeout=15) as response, temporary.open('xb') as stream:
+        with urllib.request.urlopen(request, timeout=15, context=download_context()) as response, temporary.open('xb') as stream:
             owned = True
             received = 0
             started = time.monotonic()
@@ -104,7 +139,7 @@ def main():
     parser.add_argument('--verify-only', action='store_true')
     args = parser.parse_args()
     manifest = model_manifest()
-    target = MODEL_DIR / 'ver2.ckpt'
+    target = model_target()
     def progress(**event):
         print(f'\r{event["stage"].capitalize()}: {event["received"] / event["total"]:.0%}', end='', flush=True)
     if verify_checkpoint(target, manifest, progress):

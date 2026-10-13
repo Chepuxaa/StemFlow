@@ -1,10 +1,59 @@
 {
   "repo": "SYH99999/MelBandRoformer4StemFTLarge",
   "revision": "62371baf060e8205915b4e6e3f9459fc016b6dd1",
-  "weights_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/62371baf060e8205915b4e6e3f9459fc016b6dd1/ver2.ckpt",
-  "weights_bytes": 3764030874,
-  "weights_sha256": "835ce9fa6651769c28ad5a2c87f9220b003a461d7d6c57ebe0898fff5479138c",
+  "weights_url": "https://github.com/Chepuxaa/StemFlow/releases/download/models-melband4-v2-onnx/melband-core.onnx.data",
+  "weights_bytes": 1924774042,
+  "weights_sha256": "6cee2d05b86d6e34fbd9f204f96a775ae5dc9e5fe6bcadcc02b3ab99f86e5fde",
   "config_sha256": "78e7b1da662fce6045fc5d8737e940e5f25c4c4045ca9e0458de1606a93df479",
   "license": "Apache-2.0",
-  "code_revision": "84b1eac0887756b4f1a9d7a1ff49105939749ed2"
+  "code_revision": "84b1eac0887756b4f1a9d7a1ff49105939749ed2",
+  "source_checkpoint": {
+    "weights_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/62371baf060e8205915b4e6e3f9459fc016b6dd1/ver2.ckpt",
+    "weights_bytes": 3764030874,
+    "weights_sha256": "835ce9fa6651769c28ad5a2c87f9220b003a461d7d6c57ebe0898fff5479138c"
+  },
+  "format": "onnx",
+  "chunk_seconds": [
+    6,
+    11
+  ],
+  "files": [
+    {
+      "name": "core-6.onnx",
+      "bytes": 16747069,
+      "sha256": "d088ea9ae3af15c7579b6cdfb8a39f21424d0ef113ad427189c9f68943dd8501",
+      "url": "https://github.com/Chepuxaa/StemFlow/releases/download/models-melband4-v2-onnx/core-6.onnx"
+    },
+    {
+      "name": "core-11.onnx",
+      "bytes": 16747055,
+      "sha256": "6c9d39566bf9c19196a8ad4cb6367df75cd6fcd8d22d29c874cf97cc3ce27916",
+      "url": "https://github.com/Chepuxaa/StemFlow/releases/download/models-melband4-v2-onnx/core-11.onnx"
+    },
+    {
+      "name": "melband-core.onnx.data",
+      "bytes": 1889107968,
+      "sha256": "6cee2d05b86d6e34fbd9f204f96a775ae5dc9e5fe6bcadcc02b3ab99f86e5fde",
+      "url": "https://github.com/Chepuxaa/StemFlow/releases/download/models-melband4-v2-onnx/melband-core.onnx.data"
+    },
+    {
+      "name": "core-11.onnx.data",
+      "bytes": 2097152,
+      "sha256": "ca4a0fc3deaa7f275c089067b3da7dcfb3ab2d5e56ac95d0b9becdcaa16ce0e4",
+      "url": "https://github.com/Chepuxaa/StemFlow/releases/download/models-melband4-v2-onnx/core-11.onnx.data"
+    },
+    {
+      "name": "freq-indices.npy",
+      "bytes": 63440,
+      "sha256": "b6ab87dd6d21d6612f0b8e2cba3c34ee02ad2b5a1d990b4e80a75b3f6f35f5c0",
+      "url": "https://github.com/Chepuxaa/StemFlow/releases/download/models-melband4-v2-onnx/freq-indices.npy"
+    },
+    {
+      "name": "LICENSE-model.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "url": "https://github.com/Chepuxaa/StemFlow/releases/download/models-melband4-v2-onnx/LICENSE-model.txt"
+    }
+  ],
+  "weights_file": "melband-core.onnx.data"
 }

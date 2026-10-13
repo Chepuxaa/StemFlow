@@ -27,7 +27,7 @@ def track_number(value):
     return (number, total) if 0 <= number <= 65535 and 0 <= total <= 65535 else None
 
 
-def copy_metadata(source: Path, target: Path):
+def copy_metadata(source: Path, target: Path, *, watermark=False):
     raw = mutagen.File(source)
     easy = mutagen.File(source, easy=True)
     if raw is None or easy is None:
@@ -96,5 +96,9 @@ def copy_metadata(source: Path, target: Path):
             continue
         output["covr"] = [MP4Cover(data, imageformat=image_format)]
         break
+    if watermark and output.tags.get('covr'):
+        from cover_art import watermark_cover
+        output['covr'] = [MP4Cover(watermark_cover(bytes(output['covr'][0])),
+                                   imageformat=MP4Cover.FORMAT_JPEG)]
     output.save()
     return {"copied_tags": copied, "cover_copied": bool(output.tags.get("covr"))}

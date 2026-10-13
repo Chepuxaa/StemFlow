@@ -1,49 +1,47 @@
-"""Experimental Windows onedir build: GUI and console worker share one runtime."""
+"""Windows single-file build with TensorRT RTX + ONNX CPU, no PyTorch."""
 from pathlib import Path
 import os
-from importlib.metadata import version
-from PyInstaller.utils.hooks import collect_all, collect_submodules, copy_metadata
+import sys
+from PyInstaller.utils.hooks import collect_all, collect_dynamic_libs, copy_metadata
 
 root = Path(SPECPATH).parent
+sys.path.insert(0, str(root))
+from scripts.prepare_release import collect_licenses
+from scripts.build_icon import build_icon
+from scripts.build_watermark import build_watermark
+build_watermark(root / 'ui/assets/watermark.svg', root / 'ui/assets/watermark.png')
+icon = build_icon(root / 'ui/assets/icon.svg', root / 'ui/assets/icon.ico')
+embedded_licenses = root / 'build/embedded-licenses'
+collect_licenses(embedded_licenses)
 datas = [(str(root / 'ui'), 'ui'), (str(root / 'config'), 'config'),
-         (str(root / 'vendor/msst'), 'vendor/msst'),
-         (str(root / 'LICENSE'), '.'), (str(root / 'THIRD_PARTY_NOTICES.md'), '.')]
-binaries, hiddenimports = [], ['rotary_embedding_torch', 'einops', 'beartype', 'librosa']
-for package in ('imageio_ffmpeg', 'webview'):
+         (str(root / 'LICENSE'), '.'), (str(root / 'THIRD_PARTY_NOTICES.md'), '.'),
+         (str(embedded_licenses), 'THIRD_PARTY_LICENSES')]
+binaries, hiddenimports = [], []
+for package in ('imageio_ffmpeg', 'webview', 'tensorrt_rtx',
+                'tensorrt_rtx_bindings', 'tensorrt_rtx_libs'):
     package_datas, package_binaries, package_imports = collect_all(package)
     datas += package_datas
     binaries += package_binaries
     hiddenimports += package_imports
-# The GPL FFmpeg executable is acquired directly from its upstream wheel at first run.
-# StemFlow's release carries the wrapper and notices, but does not redistribute it.
+from PyInstaller.utils.hooks import collect_data_files
+datas += collect_data_files('certifi')
+binaries += collect_dynamic_libs('onnxruntime')
+hiddenimports += ['onnxruntime.capi.onnxruntime_pybind11_state']
+for package in ('onnxruntime', 'tensorrt-rtx-cu13', 'tensorrt-rtx-cu13-bindings', 'tensorrt-rtx-cu13-libs'):
+    datas += copy_metadata(package)
 datas = [item for item in datas if not ('imageio_ffmpeg' in item[0] and item[0].endswith('.exe'))]
 binaries = [item for item in binaries if not ('imageio_ffmpeg' in item[0] and item[0].endswith('.exe'))]
-hiddenimports += collect_submodules('beartype')
-for package in ('rotary-embedding-torch', 'librosa', 'beartype'):
-    datas += copy_metadata(package)
 a = Analysis([str(root / 'stemflow.py')], pathex=[str(root)], binaries=binaries,
              datas=datas, hiddenimports=hiddenimports, hookspath=[], runtime_hooks=[],
-             excludes=['tkinter', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6'], noarchive=False)
-# Third-party hooks can add the upstream executable during Analysis as well.
+             excludes=['tkinter', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'torch', 'torchvision',
+                       'torchaudio', 'librosa', 'numba', 'scipy', 'sympy', 'onnxscript', 'onnx_ir'],
+             noarchive=False)
 a.datas = [item for item in a.datas if not ('imageio_ffmpeg' in item[0] and item[0].endswith('.exe'))]
 a.binaries = [item for item in a.binaries if not ('imageio_ffmpeg' in item[0] and item[0].endswith('.exe'))]
-# MelBand inference does not use legacy cuDNN RNN/MHA, multi-GPU solvers,
-# host profiling, cuRAND, FFTW compatibility or the alternate NVRTC library.
-# Keep cuDNN graph/engines/ops: they provide our fast attention backend.
-# A full runtime remains available for debugging and future model changes.
-slim_torch_dlls = {
-    'cudnn_adv64_9.dll', 'cusolvermg64_11.dll', 'curand64_10.dll',
-    'nvperf_host.dll', 'nvrtc64_120_0.alt.dll', 'cufftw64_11.dll',
-}
-if os.environ.get('STEMFLOW_FULL_RUNTIME') != '1':
-    if version('torch') != '2.14.1+cu126':
-        raise RuntimeError('Revalidate the slim runtime for this PyTorch version, or set STEMFLOW_FULL_RUNTIME=1.')
-    removed = [item for item in a.binaries + a.datas if Path(item[0]).name.lower() in slim_torch_dlls]
-    print('Slim runtime: excluding', len(removed), 'optional DLLs,',
-          round(sum(Path(item[1]).stat().st_size for item in removed) / 1024**2, 1), 'MiB')
-    a.binaries = [item for item in a.binaries if Path(item[0]).name.lower() not in slim_torch_dlls]
-    a.datas = [item for item in a.datas if Path(item[0]).name.lower() not in slim_torch_dlls]
 pyz = PYZ(a.pure)
-gui = EXE(pyz, a.scripts, [], exclude_binaries=True, name='StemFlow', console=False, upx=False)
-worker = EXE(pyz, a.scripts, [], exclude_binaries=True, name='StemFlow-worker', console=True, upx=False)
-app = COLLECT(gui, worker, a.binaries, a.datas, strip=False, upx=False, name='StemFlow')
+if os.environ.get('STEMFLOW_ONEDIR') == '1':
+    gui = EXE(pyz, a.scripts, [], exclude_binaries=True, name='StemFlow', console=False, upx=False, icon=str(icon))
+    worker = EXE(pyz, a.scripts, [], exclude_binaries=True, name='StemFlow-worker', console=True, upx=False)
+    app = COLLECT(gui, worker, a.binaries, a.datas, strip=False, upx=False, name='StemFlow')
+else:
+    app = EXE(pyz, a.scripts, a.binaries, a.datas, [], name='StemFlow', console=False, upx=False, icon=str(icon))

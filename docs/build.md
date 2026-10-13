@@ -15,35 +15,36 @@ On Windows, finish the source setup from the README, then run:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-The script installs PyInstaller in `.venv` and produces `dist/StemFlow/`.
-Keep the entire folder together: `StemFlow.exe`, `StemFlow-worker.exe`, and
-their shared `_internal` runtime. A single-file bundle would unpack a large
-PyTorch runtime each time its worker starts, so the initial recipe uses onedir.
-The default build uses the [validated slim CUDA profile](runtime-size.md),
-excluding about 469 MiB of optional DLLs. Set `STEMFLOW_FULL_RUNTIME=1` for a
-full-runtime diagnostic build. Model or PyTorch changes require revalidation.
-The build script adds `Download-model.cmd`, first-run instructions and available
-dependency license texts. Keep these files in the distributed folder too.
+The default build produces a single `dist/StemFlow.exe`, with libraries and
+license texts embedded. It temporarily extracts its runtime when launched.
+The GUI starts the same EXE in worker mode, reusing the parent extraction.
+Models and compiled GPU engines remain in AppData. Set `STEMFLOW_ONEDIR=1`
+to build the previous folder layout for development.
+The bundle uses TensorRT for RTX and CPU ONNX
+Runtime; PyTorch and its CUDA DLLs are excluded. The previous PyTorch runtime
+audit is no longer part of the repository. Model or engine updates require revalidation.
+Dependency license texts are embedded during the build.
 
 Model weights are not embedded. Open `StemFlow.exe`: its first-run screen checks
-the checkpoint and offers a download with progress, speed and cancellation.
+all files in the converted ONNX model bundle and offers a download with progress, speed and cancellation.
 SHA-256 verification completes before processing can start.
 The release excludes the FFmpeg executable; setup fetches its pinned upstream
 wheel (31 MB) and verifies both the wheel and extracted tool. The installed tool
 is stored in `%LOCALAPPDATA%\StemFlow\runtime`. The optional CLI setup is:
 
 ```powershell
-.\StemFlow-worker.exe --download-model
+.\StemFlow.exe --download-model
 .\StemFlow.exe
 ```
 
 The model is stored in `%LOCALAPPDATA%\StemFlow\models`. Resource assets are
 read from the bundle; settings, reports and scratch audio remain outside it.
 
-For local model-download regression tests (no real weights or internet required):
+For source and regression checks:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/test_model_download.py
+.\.venv\Scripts\python.exe scripts/check_repository.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests
 ```
 
 ## Before publishing a binary

@@ -15,7 +15,7 @@ MODEL_DIR = DATA_DIR / 'models/melband-4stem-syh-v2'
 
 def worker_command(arguments):
     if getattr(sys, 'frozen', False):
-        return [str(Path(sys.executable).parent / 'StemFlow-worker.exe'), *arguments]
+        return [sys.executable, *arguments]
     return [str(RESOURCE_DIR / '.venv/Scripts/python.exe'), '-u',
             str(RESOURCE_DIR / 'stemflow.py'), *arguments]
 

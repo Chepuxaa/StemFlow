@@ -12,5 +12,5 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     & $pythonPath scripts/prepare_release.py
     if ($LASTEXITCODE -ne 0) { throw 'Release preparation failed.' }
-    Write-Host 'Build created in dist\StemFlow. Release testing is still required.'
+    Write-Host 'Build created in dist\StemFlow.exe. Release testing is still required.'
 } finally { Pop-Location }

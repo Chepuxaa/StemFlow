@@ -8,6 +8,7 @@ from pathlib import Path
 from audio_runtime import get_ffmpeg_exe
 
 from audio_metadata import copy_metadata
+from stem_palette import DEFAULT_COLORS, validate_colors
 
 STEMS = ("drums", "bass", "other", "vocals")
 
@@ -28,11 +29,11 @@ def box(kind, payload):
     return struct.pack(">I4s", len(payload) + 8, kind) + payload
 
 
-def patch_movie(movie):
+def patch_movie(movie, stem_colors=None):
     metadata = {
         "version": 1,
         "stems": [dict(name=name.title(), color=color) for name, color in zip(
-            STEMS, ("#009E73", "#D55E00", "#CC79A7", "#56B4E9"))],
+            STEMS, validate_colors(DEFAULT_COLORS if stem_colors is None else stem_colors))],
         "mastering_dsp": {
             "compressor": {"enabled": False, "ratio": 3, "output_gain": 0.5,
                            "release": 0.3, "attack": 0.003, "input_gain": 0.5,
@@ -77,7 +78,7 @@ def patch_movie(movie):
     return b"".join(children)
 
 
-def export_stem(directory: Path, title: str, *, codec="aac", destination=None, source_track=None):
+def export_stem(directory: Path, title: str, *, codec="aac", destination=None, source_track=None, watermark=False, stem_colors=None):
     if codec not in ("aac", "alac"):
         raise ValueError("Supported codecs: aac, alac")
     destination = Path(destination) if destination is not None else directory
@@ -123,7 +124,7 @@ def export_stem(directory: Path, title: str, *, codec="aac", destination=None, s
                 if kind == b"moov":
                     if offset + size != length or header_size != 8:
                         raise ValueError("Expected final, regular moov box")
-                    movie = patch_movie(stream.read(size - 8))
+                    movie = patch_movie(stream.read(size - 8), stem_colors)
                     stream.seek(offset)
                     stream.write(box(b"moov", movie))
                     stream.truncate()
@@ -132,7 +133,7 @@ def export_stem(directory: Path, title: str, *, codec="aac", destination=None, s
             else:
                 raise ValueError("Missing moov box")
         if source_track is not None:
-            copied = copy_metadata(Path(source_track), temporary)
+            copied = copy_metadata(Path(source_track), temporary, watermark=watermark)
             print(f"Metadata: {', '.join(copied['copied_tags']) or 'no source tags'}; "
                   f"cover: {copied['cover_copied']}", flush=True)
         temporary.rename(output)

@@ -1,114 +1,73 @@
 <p align="center"><a href="README.md">English</a> · <strong>Русский</strong></p>
 
-<p align="center">
-  <img src="docs/assets/banner.svg" alt="StemFlow — four stems, your next set" width="100%">
-</p>
+<p align="center"><img src="docs/assets/banner.svg" alt="StemFlow — четыре стема для следующего сета" width="100%"></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-alpha-ff5400?style=flat-square" alt="Alpha">
-  <img src="https://img.shields.io/badge/platform-Windows-292929?style=flat-square" alt="Windows">
-  <img src="https://img.shields.io/badge/processing-CUDA%20%2F%20CPU-292929?style=flat-square" alt="CUDA / CPU">
-  <img src="https://img.shields.io/badge/interface-RU%20%2F%20EN-292929?style=flat-square" alt="RU / EN">
-  <img src="https://img.shields.io/badge/license-MIT-292929?style=flat-square" alt="MIT">
+<img src="https://img.shields.io/badge/status-alpha-ff5400?style=flat-square" alt="Alpha">
+<img src="https://img.shields.io/badge/platform-Windows-292929?style=flat-square" alt="Windows">
+<img src="https://img.shields.io/badge/runtime-TensorRT%20%2B%20ONNX-292929?style=flat-square" alt="TensorRT + ONNX">
+<img src="https://img.shields.io/badge/interface-EN%20%2F%20RU-292929?style=flat-square" alt="EN / RU">
+<img src="https://img.shields.io/badge/license-MIT-292929?style=flat-square" alt="MIT">
 </p>
 
-<p align="center"><strong>Из одного трека — в четыре партии и готовый Stem Deck.</strong><br>
+<p align="center"><strong>Один трек. Четыре партии. Готово для следующего сета.</strong><br>
 Открытый настольный генератор стемов для Traktor Pro 4.</p>
 
----
+<p align="center"><a href="https://github.com/Chepuxaa/StemFlow/releases/tag/v1.0.0-alpha.2"><strong>Скачать для Windows</strong></a> · <a href="#быстрый-старт">Быстрый старт</a> · <a href="docs/build.md">Сборка из исходников</a></p>
 
-## Что умеет StemFlow
+## Возможности
 
-| | |
+| Возможность | Подробности |
 |---|---|
-| **Четыре стема** | Drums, Bass, Other, Vocals на MelBand 4-stem SYH v2 |
-| **CUDA / CPU / Auto** | В Auto при ошибке CUDA или нехватке VRAM весь трек перезапускается на CPU |
-| **Плейлисты** | Импорт файлов и папок, обложки в очереди, отмена и повтор; модель загружается один раз на очередь |
-| **Traktor Stem** | Оригинальный мастер + 4 стема, пять стереодорожек AAC с целью 320 кбит/с каждая |
-| **Метаданные** | Поддерживаемые теги и обложка переносятся из оригинала |
-| **Своя папка** | Выбор места сохранения, запоминание пути, опциональное сохранение WAV |
-| **Замена оригиналов** | Stem рядом с треком, оригинал в резервной папке после проверки экспорта |
-| **Интерфейс** | RU / EN, Roboto, фиксированное окно с собственными кнопками управления |
+| **Четыре стема** | Барабаны, бас, остальное и вокал на MelBand 4-stem SYH v2 |
+| **Ускорение на GPU** | TensorRT for RTX, повторное использование подготовленных движков |
+| **Обработка на CPU** | ONNX Runtime; «Быстрый CPU» использует INT8 для линейных слоёв |
+| **Auto** | Предпочитает GPU; при обрабатываемой ошибке CUDA перезапускает трек на CPU |
+| **Очередь** | Файлы и папки, обложки, отмена и повтор; модель остаётся загруженной на очередь |
+| **Экспорт в Traktor** | Оригинальный мастер + четыре стема в `.stem.mp4`, пять стереодорожек AAC с целевым битрейтом 320 кбит/с каждая |
+| **Обложки и теги** | Перенос поддерживаемых метаданных; необязательная плашка StemFlow |
+| **Настройки** | Цвета стемов, перекрытие 50% / 75%, фрагменты 6 / 11 секунд, английский / русский |
+| **Свои файлы** | Выбор папки, WAV по желанию, замена треков с резервными копиями оригиналов |
 
-Нормализация, компрессор и лимитер отключены. Мастер не проходит через модель;
-сумма разделённых стемов может отличаться от оригинала.
-Для новых пользователей интерфейс запускается на английском. В Settings можно
-переключить язык на русский; сохранённый ранее выбор не сбрасывается.
+Мастер не проходит через модель. Нормализация, компрессор и лимитер отключены;
+сумма стемов может отличаться от оригинала. Обработка локальная, интернет нужен
+для первоначальной загрузки компонентов. Экспорт для Serato пока не реализован.
 
-## Скачать для Windows
+## Быстрый старт
 
-[**Windows альфа-релиз**](https://github.com/Chepuxaa/StemFlow/releases/tag/v1.0.0-alpha.1).
-Распакуй всю папку приложения и запусти **`StemFlow.exe`**.
-Рядом должны оставаться `StemFlow-worker.exe` и `_internal`: это обработчик
-и зависимости CUDA. Отдельная установка Python не нужна.
+1. Скачай **`StemFlow.exe`** из [релиза приложения](https://github.com/Chepuxaa/StemFlow/releases/tag/v1.0.0-alpha.2).
+2. Запусти. Нужен **один EXE** — без отдельного обработчика, `_internal` и установки Python.
+3. Скачай модель через приложение: есть прогресс и проверка SHA-256.
+4. Выбери папку, добавь треки, укажи **Auto**, **CUDA** или **CPU** и запусти очередь.
+5. Открой `.stem.mp4` в Stem Deck Traktor.
 
-Первый запуск предлагает скачать модель (3,76 ГБ) и аудиоинструмент (около 31 МБ)
-напрямую из источников, с прогрессом и проверкой целостности. После установки
-обработка работает без интернета. Если архив разделён на `.001` и `.002`, скачай
-обе части в одну папку и открой `.001` через [7-Zip](https://www.7-zip.org/).
+EXE занимает примерно **142 МБ** (136 МиБ). Отдельно скачиваются **модель 1,92 ГБ**
+и аудиоинструмент около **31 МБ**. При первом использовании GPU готовится движок
+под видеокарту — нужны время и дополнительное место. «Быстрый CPU» создаёт
+локальный кэш примерно **0,94 ГБ**, без новой загрузки модели. EXE временно
+распаковывает библиотеки при запуске; использование диска превышает размер EXE.
 
-## Запуск из исходников
+### Требования и настройки
 
-**Проверенное окружение:** Windows, Python 3.14.8 x64, PyTorch CUDA 12.6,
-RTX 3070 8 ГБ, 16 ГБ RAM. На CPU обработка работает, но заметно медленнее.
-Нужен [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/).
+- **Windows x64**, [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/).
+- **GPU:** совместимая NVIDIA RTX и драйвер; проверено на RTX 3070 с 8 ГБ VRAM.
+- **RAM:** проверено с 16 ГБ; подготовке модели нужна свободная память.
+- **CPU:** поддерживается, но существенно медленнее GPU. «Быстрый CPU» включён в GUI по умолчанию; отключение возвращает исходную точность. INT8 может немного менять звук.
+- **Перекрытие:** 75% — больше проходов, 50% — меньше вычислений. Сравни на своих треках.
+- **Фрагменты:** по умолчанию 11 секунд; 6 секунд уменьшают требования к видеопамяти.
 
-### 1. Окружение
+PyTorch и полный CUDA Toolkit **не нужны**. Auto восстанавливается после
+обрабатываемых ошибок GPU; аварийное завершение нативного движка требует повтора
+или ручного выбора CPU. Это альфа: проверка на большем числе компьютеров продолжается.
+Первоначальный язык — английский; переключение на русский сохраняется.
 
-Скачай код репозитория и открой PowerShell в его папке:
+## Экспорт и резервные копии
 
-```powershell
-py -3.14 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --no-cache-dir -r requirements/app.lock.txt
-```
+Готовые Stem-файлы не перезаписываются. Поддержка тегов и обложки зависит от
+формата источника. Плашка меняет только экспортированную обложку. Цвета стемов
+записываются в NI-контейнер; отображение зависит от режима цвета в Traktor.
 
-Все зависимости остаются внутри `.venv`. FFmpeg входит в imageio-ffmpeg;
-отдельная установка FFmpeg для приложения не требуется.
-
-### 2. Модель
-
-```powershell
-.\.venv\Scripts\python.exe scripts/download_model.py
-```
-
-Скачивается **только SYH v2**, около **3,76 ГБ**. Скрипт проверяет размер и SHA-256.
-Веса исключены из Git; конфиг, источник и контрольные суммы находятся в `config/`.
-Загрузка идёт напрямую с Hugging Face. GUI проверяет модель при запуске и предлагает
-скачать её внутри приложения с прогрессом, скоростью и отменой. Команда выше —
-альтернативный способ установки. Установленные веса используются
-повторно; после установки зависимостей и весов обработка не требует интернета.
-
-Модель: [SYH99999 / MelBandRoformer4StemFTLarge](https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge).
-Версия и ссылка закреплены на конкретной ревизии, а не на изменяемом `main`.
-
-### 3. Приложение
-
-Открой **`Start-Stemgen.cmd`** или выполни:
-
-```powershell
-.\.venv\Scripts\python.exe stemflow.py
-```
-
-Для проверки видеокарты:
-
-```powershell
-.\.venv\Scripts\python.exe scripts/check_cuda.py
-```
-
-## Рабочий процесс
-
-1. Выбери папку сохранения на главном экране или в **Settings → Экспорт**.
-2. Добавь треки или целую папку.
-3. Выбери **Auto**, **CUDA** или **CPU** и запусти очередь.
-4. Открой готовый `.stem.mp4` в Stem Deck Traktor.
-
-Фрагменты по 11 секунд используются по умолчанию; 6 секунд уменьшают расход VRAM.
-Готовые Stem-файлы не перезаписываются.
-
-### Замена файлов в исходной папке
-
-В Settings выбери **«Заменить в исходной папке»**. Перед переносом оригинала
-приложение проверяет пять аудиодорожек и копию контейнера.
+**«Заменить в исходной папке»** проверяет экспорт перед переносом оригинала:
 
 ```text
 Music/
@@ -120,75 +79,74 @@ Music/
 Для восстановления перенеси оригинал из `.stemflow-originals` обратно.
 Резервные копии и готовые Stem-файлы исключены из повторного импорта.
 
-## Командная строка
-
-```powershell
-.\.venv\Scripts\python.exe separate.py "D:\Music\Track.mp3" --seconds 0 --device auto --output-dir "D:\Music\Stems" --discard-wavs
-```
-
-`--seconds 0` — весь трек. В CLI WAV сохраняются, если не передать
-`--discard-wavs`. Для замены полного трека используй `--replace-original`
-вместо `--output-dir`.
-
 ## Где лежат данные
 
 | Данные | Каталог |
 |---|---|
-| Настройки, очередь, отчёты, кэш окна | `%LOCALAPPDATA%\StemFlow` |
+| Модель и кэш CPU | `%LOCALAPPDATA%\StemFlow\models\melband-4stem-syh-v2` |
+| Движки GPU | `%LOCALAPPDATA%\StemFlow\engines` |
+| Аудиоинструмент | `%LOCALAPPDATA%\StemFlow\runtime` |
+| Настройки, очередь, отчёты | `%LOCALAPPDATA%\StemFlow` |
 | Временное аудио | `%TEMP%\StemFlow`, очищается после обработки или отмены |
-| Готовые файлы | Выбранная пользователем папка |
-| Сохранённые WAV | `<название>-stems` рядом с готовым файлом |
-| Веса при запуске исходников | `%LOCALAPPDATA%\StemFlow\models\melband-4stem-syh-v2` |
-| Веса в EXE-сборке | `%LOCALAPPDATA%\StemFlow\models` |
+| Готовые файлы | Выбранная папка |
+| Необязательные WAV | `<название>-stems` рядом с готовым файлом |
 
-## Разработка и EXE
+Модели и движки не лежат рядом с EXE. Удаление кэша движков при закрытом приложении
+приведёт к его повторной подготовке при следующей обработке на GPU.
+
+## Запуск из исходников
+
+Нужен **Python 3.14 x64**; текущая сборка использует Python 3.14.8.
+Открой PowerShell в папке репозитория:
+
+```powershell
+py -3.14 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --no-cache-dir -r requirements/app.lock.txt
+.\.venv\Scripts\python.exe stemflow.py
+```
+
+Зависимости остаются внутри `.venv`. Модель устанавливается через GUI.
+Альтернативный запуск — `Start-Stemgen.cmd`. Ручная установка модели:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/download_model.py
+.\.venv\Scripts\python.exe scripts/download_model.py --verify-only
+```
+
+Веса находятся в [отдельном релизе модели](https://github.com/Chepuxaa/StemFlow/releases/tag/models-melband4-v2-onnx),
+а не в Git или EXE. Используется конвертированный
+[checkpoint SYH99999](https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge).
+Источники, размеры и контрольные суммы закреплены в `config/model.json`.
+
+### Командная строка
+
+```powershell
+.\.venv\Scripts\python.exe separate.py "D:\Music\Track.mp3" --seconds 0 --device auto --output-dir "D:\Music\Stems" --discard-wavs --overlap 75 --cpu-fast
+```
+
+`--seconds 0` — весь трек. WAV сохраняются, если не передать `--discard-wavs`.
+Для замены оригинала используй `--replace-original` вместо `--output-dir`.
+`--cpu-fast` включает INT8 только на CPU; без него CLI использует исходную точность.
+`--watermark-cover` добавляет плашку на экспортированную обложку.
+
+### Разработка
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/check_repository.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests
 ```
 
-[Contributing](CONTRIBUTING.md) · [Инструкция сборки EXE](docs/build.md)
-
-В EXE-сборке модель скачивается через интерфейс приложения и хранится в
-`%LOCALAPPDATA%\StemFlow\models\melband-4stem-syh-v2`.
-
-Первая **альфа-сборка Windows** создана и проверена на компьютере разработчика:
-запуск GUI, разделение на CUDA и CPU, Auto без CUDA, очередь, переиспользование
-модели и отмена обработчика. Проверка на чистой Windows и большем наборе треков
-ещё нужна. Альфа доступна в
-[GitHub Releases](https://github.com/Chepuxaa/StemFlow/releases/tag/v1.0.0-alpha.1).
-
-Распакуй всю папку с `StemFlow.exe`, `StemFlow-worker.exe` и `_internal`.
-Python уже включён. Запусти `StemFlow.exe`: приложение проверит модель и предложит
-скачать её с прогрессом, скоростью и отменой. Отдельный скрипт не нужен.
-
-```text
-stemflow.py           входная точка GUI / worker
-desktop.py           окно, очередь, обложки и настройки
-separate.py           обработка трека и протокол очереди
-model_runtime.py      модель и кэш на очередь
-ni_stem.py            NI Stem контейнер
-audio_metadata.py     обложки и теги
-file_output.py        проверка и замена оригиналов
-app_paths.py          ресурсы, данные и временные файлы
-ui/                   HTML, CSS, JS, логотип и шрифт
-config/               конфиг и манифест модели
-vendor/msst/          закреплённая архитектура и лицензия
-scripts/              загрузка модели, проверки и сборка
-packaging/            рецепт PyInstaller
-```
+[Сборка Windows EXE](docs/build.md) · [Contributing](CONTRIBUTING.md)
 
 ## Лицензия и благодарности
 
 Разработчик и дизайнер: **[@Chepuxaa](https://github.com/Chepuxaa)**.
-
 Разработано при содействии **OpenAI Codex**.
 
-Оригинальный код — [MIT](LICENSE). Сторонние компоненты и веса сохраняют свои
+Оригинальный код — [MIT](LICENSE). Веса и сторонние компоненты сохраняют свои
 лицензии: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-Спасибо автору весов **SYH99999**, проекту
+Спасибо **SYH99999** за веса,
 [Music Source Separation Training](https://github.com/ZFTurbo/Music-Source-Separation-Training)
-и разработчикам PyTorch, pywebview и Roboto.
-
+за архитектуру, командам ONNX Runtime, NVIDIA, pywebview и Roboto.
 StemFlow — независимый проект, не связанный с Native Instruments.

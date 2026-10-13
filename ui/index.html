@@ -50,12 +50,35 @@
     <div class="setting-row"><label for="device"><strong>Устройство обработки</strong><span class="setting-help" id="device-help">Проверка CUDA… CPU доступен всегда.</span></label><select id="device"><option value="auto">Auto</option><option value="cuda" id="cuda-option" disabled>CUDA · проверка…</option><option value="cpu">CPU</option></select></div>
     <div class="setting-row"><div><strong>Модель</strong><p>Вокал, барабаны, бас и остальные инструменты</p></div><span class="setting-value">MelBand 4-stem v2</span></div>
     <div class="setting-row"><label for="chunk"><strong>Размер фрагмента</strong><span class="setting-help">6 секунд — меньше расход видеопамяти</span></label><select id="chunk"><option value="11">11 секунд</option><option value="6">6 секунд</option></select></div>
+    <div class="setting-row"><label for="overlap"><strong>Перекрытие фрагментов</strong><span class="setting-help">50% — меньше проходов модели, 75% — текущий режим</span></label><select id="overlap"><option value="75">75%</option><option value="50">50%</option></select></div>
+    <label class="setting-row switch-row"><span><strong>Быстрый CPU</strong><span class="setting-help">INT8: меньше памяти и быстрее, звук может немного отличаться</span></span><span class="toggle"><input id="cpu-fast" type="checkbox"><span class="switch"></span></span></label>
     <label class="setting-row switch-row"><span><strong>Сохранять WAV</strong><span class="setting-help">Отдельные дорожки для монтажа и прослушивания</span></span><span class="toggle"><input id="keep-wavs" type="checkbox"><span class="switch"></span></span></label>
   </div>
   <div class="settings-card export-card"><div class="settings-title"><h2>Экспорт для Traktor</h2><span class="small-tag">.stem.mp4</span></div><div class="setting-row"><label for="output-mode"><strong>Сохранение файлов</strong><span class="setting-help" id="output-help">Готовые файлы в выбранной папке.</span></label><select id="output-mode"><option value="output">В выбранную папку</option><option value="replace">Заменить в исходной папке</option></select></div><div class="destination-row" id="destination-row"><div><span class="destination-label">Папка сохранения</span><span id="destination-path">Папка не выбрана</span></div><button id="choose-destination" class="button ghost">Выбрать</button></div><div class="export-details"><div><span>Мастер и стемы</span><strong>320 кбит/с</strong></div><div><span>Теги и обложка</span><strong>Из оригинала</strong></div><div><span>Нормализация</span><strong>Отключена</strong></div></div></div>
+  <div class="settings-card palette-card">
+    <div class="palette-heading"><div><h2>Цвета стемов</h2><p class="setting-help">Цвета дорожек в новых Stem-файлах</p></div><button id="reset-stem-colors" class="palette-reset" type="button">Сбросить</button></div>
+    <div class="stem-palette">
+      <button id="pick-drums" class="stem-color" type="button" aria-haspopup="dialog"><input id="color-drums" type="hidden" value="#009e73"><span class="color-swatch" aria-hidden="true"></span><span><strong>Барабаны</strong><small id="hex-drums">#009E73</small></span></button>
+      <button id="pick-bass" class="stem-color" type="button" aria-haspopup="dialog"><input id="color-bass" type="hidden" value="#d55e00"><span class="color-swatch" aria-hidden="true"></span><span><strong>Бас</strong><small id="hex-bass">#D55E00</small></span></button>
+      <button id="pick-other" class="stem-color" type="button" aria-haspopup="dialog"><input id="color-other" type="hidden" value="#cc79a7"><span class="color-swatch" aria-hidden="true"></span><span><strong>Остальное</strong><small id="hex-other">#CC79A7</small></span></button>
+      <button id="pick-vocals" class="stem-color" type="button" aria-haspopup="dialog"><input id="color-vocals" type="hidden" value="#56b4e9"><span class="color-swatch" aria-hidden="true"></span><span><strong>Вокал</strong><small id="hex-vocals">#56B4E9</small></span></button>
+    </div>
+    <div class="palette-strip" aria-hidden="true"><span id="preview-drums"></span><span id="preview-bass"></span><span id="preview-other"></span><span id="preview-vocals"></span></div>
+  </div>
+  <div class="settings-card"><label class="setting-row switch-row"><span><strong>Значок StemFlow на обложке</strong><span class="setting-help">Только на обложке готового Stem-файла</span></span><span class="toggle"><input id="watermark-cover" type="checkbox"><span class="switch"></span></span></label></div>
   <div class="settings-card"><div class="setting-row"><label for="language"><strong>Язык интерфейса</strong></label><select id="language"><option value="ru">Русский · RU</option><option value="en">English · EN</option></select></div></div>
 </section>
 <footer><span class="author-credit"><span>Разработчик и дизайнер</span> <button id="open-author" class="author-link">@Chepuxaa</button></span><span id="notice" role="status">Подключение…</span></footer>
 </main>
-<script src="i18n.js"></script><script src="app.js"></script>
+<div id="color-picker-overlay" class="color-picker-overlay" hidden>
+  <section id="color-picker" class="color-picker" role="dialog" aria-labelledby="picker-title">
+    <div class="picker-heading"><div><span class="picker-eyebrow">Цвет стема</span><h2 id="picker-title">Drums</h2></div><button id="picker-close" class="picker-close" type="button" aria-label="Закрыть"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8"/></svg></button></div>
+    <div id="picker-field" class="picker-field" tabindex="0" role="slider" aria-label="Насыщенность и яркость" aria-valuemin="0" aria-valuemax="100"><span id="picker-cursor"></span></div>
+    <input id="picker-hue" class="picker-hue" type="range" min="0" max="360" step="1" aria-label="Оттенок">
+    <div class="picker-value"><span id="picker-sample" aria-hidden="true"></span><label for="picker-hex">HEX</label><input id="picker-hex" type="text" maxlength="7" spellcheck="false" autocomplete="off" aria-label="HEX" placeholder="#FF5400"></div>
+    <div id="picker-presets" class="picker-presets" aria-label="Палитра"></div>
+    <div class="picker-actions"><button id="picker-cancel" type="button" class="button ghost">Отмена</button><button id="picker-apply" type="button" class="button accent">Применить</button></div>
+  </section>
+</div>
+<script src="i18n.js"></script><script src="app.js"></script><script src="color_picker.js"></script>
 </body></html>
