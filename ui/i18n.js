@@ -198,7 +198,7 @@ const translations = {
     "stage_cancelled": "Cancelled"
   }
 };
-let language = 'ru';
+let language = 'en';
 const localizedNodes = [];
 const localizedAttributes = [];
 const staticKeys = new Map();
@@ -221,9 +221,10 @@ function t(key, values={}) {
   return (translations[language][key] || key).replace(/\{(\w+)\}/g, (_, name) => values[name] ?? '');
 }
 function applyLanguage(value) {
-  language = value === 'en' ? 'en' : 'ru';
+  language = value === 'ru' ? 'ru' : 'en';
   document.documentElement.lang = language;
+  document.getElementById('language').value = language;
   for (const entry of localizedNodes) entry.node.textContent = entry.prefix + t(entry.key) + entry.suffix;
   for (const entry of localizedAttributes) entry.node.setAttribute(entry.attribute,t(entry.key));
 }
-applyLanguage('ru');
+applyLanguage('en');

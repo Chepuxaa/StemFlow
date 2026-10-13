@@ -37,7 +37,7 @@ function action(container, text, title, callback) {
   const button = document.createElement('button'); button.textContent = text; button.title = title; button.setAttribute('aria-label', title); button.onclick = callback; container.appendChild(button);
 }
 function render(state) {
-  const nextLanguage = state.settings.language || 'ru';
+  const nextLanguage = state.settings.language || 'en';
   if (nextLanguage !== language) applyLanguage(nextLanguage);
   $('language').value = language;
   const pending = state.jobs.filter(job => job.status === 'pending').length;

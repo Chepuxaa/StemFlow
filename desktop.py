@@ -37,7 +37,7 @@ class DesktopAPI:
         self._worker_script = Path(worker_script) if worker_script else ROOT / "separate.py"
         self._jobs = []
         self._covers = {}
-        self._settings = {"keep_wavs": False, "chunk_seconds": 11, "device": "auto", "language": "ru", "output_mode": "output", "output_directory": ""}
+        self._settings = {"keep_wavs": False, "chunk_seconds": 11, "device": "auto", "language": "en", "output_mode": "output", "output_directory": ""}
         self._notice = ""
         saved_file = self._state_file
         if state_file is None and not saved_file.exists() and (ROOT / '.cache/queue.json').exists():
@@ -49,7 +49,7 @@ class DesktopAPI:
                 if self._settings.get('device') not in ('auto', 'cuda', 'cpu'):
                     self._settings['device'] = 'auto'
                 if self._settings.get('language') not in ('ru', 'en'):
-                    self._settings['language'] = 'ru'
+                    self._settings['language'] = 'en'
                 if self._settings.get('output_mode') not in ('output', 'replace'):
                     self._settings['output_mode'] = 'output'
                 if not isinstance(self._settings.get('output_directory'), str):
