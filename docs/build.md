@@ -19,6 +19,9 @@ The script installs PyInstaller in `.venv` and produces `dist/StemFlow/`.
 Keep the entire folder together: `StemFlow.exe`, `StemFlow-worker.exe`, and
 their shared `_internal` runtime. A single-file bundle would unpack a large
 PyTorch runtime each time its worker starts, so the initial recipe uses onedir.
+The default build uses the [validated slim CUDA profile](runtime-size.md),
+excluding about 469 MiB of optional DLLs. Set `STEMFLOW_FULL_RUNTIME=1` for a
+full-runtime diagnostic build. Model or PyTorch changes require revalidation.
 The build script adds `Download-model.cmd`, first-run instructions and available
 dependency license texts. Keep these files in the distributed folder too.
 
