@@ -10,8 +10,7 @@ RESOURCE_DIR = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent))
 
 DATA_DIR = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'StemFlow'
 TEMP_ROOT = Path(tempfile.gettempdir()) / 'StemFlow'
-MODEL_DIR = (DATA_DIR / 'models/melband-4stem-syh-v2' if getattr(sys, 'frozen', False)
-             else RESOURCE_DIR / 'models/melband-4stem-syh-v2')
+MODEL_DIR = DATA_DIR / 'models/melband-4stem-syh-v2'
 
 
 def worker_command(arguments):

@@ -1,13 +1,15 @@
 StemFlow for Windows x64 - alpha build
 
-1. Extract the entire ZIP. Keep StemFlow.exe, StemFlow-worker.exe and _internal together.
+1. Extract the complete archive. Keep StemFlow.exe, StemFlow-worker.exe and _internal together.
 2. Open StemFlow.exe. It checks the model and offers a 3.76 GB download if needed.
    Download progress, speed, integrity verification and cancellation are built in.
+   Setup also acquires the audio tool directly from its upstream wheel (about 31 MB).
 3. Choose a save folder and add tracks. Download-model.cmd is an optional CLI alternative.
 
 Python is included in the application bundle. The GUI requires Microsoft Edge
 WebView2 Runtime. CUDA requires a compatible NVIDIA driver; CPU mode is available.
 Settings, model weights and reports are stored in %LOCALAPPDATA%\StemFlow.
+The audio tool is stored in %LOCALAPPDATA%\StemFlow\runtime.
 Do not copy only the EXE: its _internal runtime is required.
 
 Source and instructions: https://github.com/Chepuxaa/StemFlow

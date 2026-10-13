@@ -1,5 +1,10 @@
 const translations = {
   "ru": {
+    "model_tools_missing": "Подготовим аудиоинструменты",
+    "model_tools_downloading": "Скачиваем аудиоинструменты",
+    "model_tools_verifying": "Проверяем аудиоинструменты",
+    "modelToolsHelp": "Небольшая загрузка для чтения аудио и экспорта. Нужна один раз.",
+    "modelToolsDownload": "Скачать",
     "model_checking": "Проверяем модель",
     "model_missing": "Скачаем модель?",
     "model_invalid": "Модель повреждена",
@@ -17,7 +22,7 @@ const translations = {
     "modelCancel": "Отменить",
     "modelCancelling": "Отменяем…",
     "modelPreparation": "Подготовка модели",
-    "modelPrivacy": "Треки остаются на компьютере. Интернет нужен только для скачивания модели.",
+    "modelPrivacy": "Треки остаются на компьютере. Интернет нужен только для первой установки.",
     "saveFiles": "Сохранение файлов",
     "destination": "Папка сохранения",
     "author": "Разработчик и дизайнер",
@@ -117,6 +122,11 @@ const translations = {
     "stage_cancelled": "Отменено"
   },
   "en": {
+    "model_tools_missing": "Let's prepare your audio tools",
+    "model_tools_downloading": "Downloading audio tools",
+    "model_tools_verifying": "Verifying audio tools",
+    "modelToolsHelp": "A small, one-time download for reading audio and exporting stems.",
+    "modelToolsDownload": "Download",
     "model_checking": "Checking model",
     "model_missing": "Let's get your model",
     "model_invalid": "Model needs repair",
@@ -134,7 +144,7 @@ const translations = {
     "modelCancel": "Cancel",
     "modelCancelling": "Cancelling…",
     "modelPreparation": "Model preparation",
-    "modelPrivacy": "Your tracks stay on this computer. Internet is only needed to download the model.",
+    "modelPrivacy": "Your tracks stay on this computer. Internet is only needed for first-time setup.",
     "saveFiles": "Save files",
     "destination": "Destination folder",
     "author": "Developer & designer",

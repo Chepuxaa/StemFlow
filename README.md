@@ -33,6 +33,18 @@ An open-source desktop stem generator for Traktor Pro 4.</p>
 Normalization, compression and limiting are disabled. The master bypasses the
 model; the sum of the separated stems may differ from the original.
 
+## Download for Windows
+
+[**Get the Windows alpha release**](https://github.com/Chepuxaa/StemFlow/releases/tag/v1.0.0-alpha.1).
+Extract the complete application folder and launch **`StemFlow.exe`**.
+Keep `StemFlow-worker.exe` and `_internal` beside it: the worker and CUDA runtime
+are required. Python does not need to be installed separately.
+
+First-run setup downloads the model (3.76 GB) and the audio tool (about 31 MB)
+directly from their upstream sources, with progress and integrity checks.
+Once installed, processing works offline. If the archive has `.001` and `.002`
+parts, download both into one folder and open `.001` with [7-Zip](https://www.7-zip.org/).
+
 ## Quick start from source
 
 **Tested setup:** Windows, Python 3.14.8 x64, PyTorch CUDA 12.6, RTX 3070 with
@@ -64,7 +76,7 @@ from [SYH99999's Hugging Face repository](https://huggingface.co/SYH99999/MelBan
 It uses the pinned revision in `config/model.json` and verifies both file size and
 SHA-256 before installing the checkpoint.
 
-- Source checkout: `models/melband-4stem-syh-v2/ver2.ckpt`.
+- Both source and EXE: `%LOCALAPPDATA%\StemFlow\models\melband-4stem-syh-v2\ver2.ckpt`.
 - The model configuration and download manifest are versioned in `config/`.
 - An existing checkpoint is verified and reused.
 - The GUI checks model integrity at startup and offers an in-app download with progress, speed and cancellation when weights are missing or invalid.
@@ -134,7 +146,7 @@ instead of `--output-dir`.
 | Scratch audio | `%TEMP%\StemFlow`; cleared on completion or cancellation |
 | Finished stems | Your selected destination |
 | Retained WAVs | `<track>-stems` beside the finished file |
-| Model weights in source mode | `models/melband-4stem-syh-v2` |
+| Model weights in source mode | `%LOCALAPPDATA%\StemFlow\models\melband-4stem-syh-v2` |
 | Model weights in the EXE build | `%LOCALAPPDATA%\StemFlow\models\melband-4stem-syh-v2` |
 
 ## Development and Windows EXE
@@ -148,7 +160,8 @@ instead of `--output-dir`.
 The first **alpha Windows build** has been created and checked on the development
 PC: GUI startup, CUDA/CPU separation, Auto fallback without CUDA, queue processing,
 model reuse and worker cancellation. It still needs testing on a clean Windows
-installation and with more real-world tracks. A public binary release is not yet published.
+installation and with more real-world tracks. Download the alpha from
+[GitHub Releases](https://github.com/Chepuxaa/StemFlow/releases/tag/v1.0.0-alpha.1).
 
 The bundle contains `StemFlow.exe`, `StemFlow-worker.exe` and a shared `_internal`
 directory. Extract and keep the entire folder together; Python is included.

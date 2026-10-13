@@ -72,7 +72,7 @@ def download_checkpoint(target, manifest, progress=lambda **event: None, cancel=
             started = time.monotonic()
             while True:
                 _check_cancel(cancel)
-                block = response.read(1024 * 1024)
+                block = response.read1(1024 * 1024)
                 if not block:
                     break
                 received += len(block)
@@ -109,10 +109,15 @@ def main():
         print(f'\r{event["stage"].capitalize()}: {event["received"] / event["total"]:.0%}', end='', flush=True)
     if verify_checkpoint(target, manifest, progress):
         print(f'\nVerified: {target}')
+        if not args.verify_only:
+            from audio_runtime import install
+            install(progress)
         return
     if args.verify_only:
         raise SystemExit(f'Checkpoint missing or invalid: {target}')
     download_checkpoint(target, manifest, progress)
+    from audio_runtime import install
+    install(progress)
     print(f'\nVerified: {target}')
 
 

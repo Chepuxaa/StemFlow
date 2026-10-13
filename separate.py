@@ -12,7 +12,7 @@ import traceback
 import tempfile
 import shutil
 
-import imageio_ffmpeg
+from audio_runtime import get_ffmpeg_exe
 import numpy as np
 import soundfile as sf
 import torch
@@ -197,7 +197,7 @@ def _process_track(args, cache, directory):
         mono = 0.12 * np.sin(2 * np.pi * 220 * t) + 0.08 * np.sin(2 * np.pi * 880 * t)
         sf.write(master_path, np.stack((mono, mono), axis=1), RATE, subtype="FLOAT")
     else:
-        command = [imageio_ffmpeg.get_ffmpeg_exe(), "-nostdin", "-hide_banner",
+        command = [get_ffmpeg_exe(), "-nostdin", "-hide_banner",
                    "-loglevel", "error", "-n", "-ss", str(args.start), "-i", str(args.track)]
         if args.seconds:
             command += ["-t", str(args.seconds)]

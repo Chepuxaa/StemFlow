@@ -32,4 +32,15 @@ Extract it and upload the source files; uploading the ZIP itself does not create
 a browsable source repository. Do not upload model weights into Git.
 
 EXE builds belong in GitHub Releases after the validation described in
-[build.md](build.md). No repository is created or published automatically.
+[build.md](build.md). The project repository is
+[Chepuxaa/StemFlow](https://github.com/Chepuxaa/StemFlow).
+
+The Windows distribution is an entire application folder, not a single EXE.
+Keep both executables, `_internal`, instructions and license files in the archive.
+The model and FFmpeg executable are acquired from upstream at first run and are
+not embedded in the release. Do not package development caches, tracks or weights.
+
+GitHub limits each release asset to under 2 GiB. Use a 7-Zip archive with 1900 MiB
+volumes when needed, include SHA256SUMS.txt, and explain that all parts must be
+downloaded into the same folder before extraction. Publish alpha builds as
+prereleases; upload and verify assets in a draft before publishing it.

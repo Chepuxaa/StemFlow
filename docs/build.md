@@ -24,7 +24,10 @@ dependency license texts. Keep these files in the distributed folder too.
 
 Model weights are not embedded. Open `StemFlow.exe`: its first-run screen checks
 the checkpoint and offers a download with progress, speed and cancellation.
-SHA-256 verification completes before processing can start. The optional CLI setup is:
+SHA-256 verification completes before processing can start.
+The release excludes the FFmpeg executable; setup fetches its pinned upstream
+wheel (31 MB) and verifies both the wheel and extracted tool. The installed tool
+is stored in `%LOCALAPPDATA%\StemFlow\runtime`. The optional CLI setup is:
 
 ```powershell
 .\StemFlow-worker.exe --download-model
@@ -46,7 +49,7 @@ For local model-download regression tests (no real weights or internet required)
 - Test CUDA and CPU export, device probing, two queued tracks, cancellation and restart.
 - Test folder selection, source replacement with recovery, covers and metadata.
 - Inspect PyInstaller warnings for dynamic imports and missing DLLs.
-- Include licenses for every bundled dependency and the FFmpeg binary.
+- Include licenses for every bundled dependency; do not add the acquired FFmpeg executable to the release.
 - Verify behavior with non-ASCII paths and a read-only installation directory.
 
 Official references: [PyInstaller](https://pyinstaller.org/en/stable/),

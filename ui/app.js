@@ -41,10 +41,10 @@ function renderModel(model) {
   $('model-setup').hidden = model.stage === 'ready';
   $('model-language').value = language;
   const active = model.active;
-  const checking = ['checking','verifying'].includes(model.stage);
+  const checking = ['checking','verifying','tools_verifying'].includes(model.stage);
   const percent = Math.max(0, Math.min(100, 100 * model.received / model.total));
   $('model-title').textContent = t('model_' + model.stage);
-  $('model-description').textContent = t(checking ? 'modelCheckHelp' : model.stage === 'downloading' ? 'modelDownloadHelp' : 'modelSetupHelp');
+  $('model-description').textContent = t(model.stage.startsWith('tools_') ? 'modelToolsHelp' : checking ? 'modelCheckHelp' : model.stage === 'downloading' ? 'modelDownloadHelp' : 'modelSetupHelp');
   $('model-progress').hidden = !active;
   $('model-progress').setAttribute('aria-label', t('modelPreparation'));
   $('model-progress').setAttribute('aria-valuenow', Math.floor(percent));
@@ -54,7 +54,7 @@ function renderModel(model) {
   $('model-error').hidden = !model.error;
   $('model-error').textContent = model.error || '';
   $('model-download').hidden = active || model.stage === 'ready';
-  $('model-download').textContent = t(model.stage === 'invalid' ? 'modelRepair' : 'modelDownload');
+  $('model-download').textContent = t(model.stage === 'tools_missing' ? 'modelToolsDownload' : model.stage === 'invalid' ? 'modelRepair' : 'modelDownload');
   $('model-check').hidden = active || model.stage === 'missing' || model.stage === 'ready';
   $('model-check').textContent = t('modelRecheck');
   $('model-cancel').hidden = !active;

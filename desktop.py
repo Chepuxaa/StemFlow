@@ -22,6 +22,7 @@ from file_output import BACKUP_FOLDER
 from app_paths import DATA_DIR, MODEL_DIR, RESOURCE_DIR, cleanup_run_directory, worker_command
 from scripts.download_model import (DownloadCancelled, checkpoint_fingerprint,
                                     download_checkpoint, model_manifest, verify_checkpoint)
+import audio_runtime
 
 ROOT = RESOURCE_DIR
 EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a", ".mp4", ".aif", ".aiff", ".ogg", ".opus"}
@@ -92,6 +93,7 @@ class DesktopAPI:
             self._model_cancel.clear()
             self._model_fingerprint = None
             self._model.update(stage='downloading' if download else 'checking', received=0,
+                               total=model_manifest()['weights_bytes'],
                                speed=0, error='', active=True, cancelling=False)
             # Let cancellation finish cleaning its partial file when the window closes.
             self._model_thread = threading.Thread(target=self._run_model_task, args=(download,), daemon=False)
@@ -102,14 +104,20 @@ class DesktopAPI:
         target = MODEL_DIR / 'ver2.ckpt'
         manifest = model_manifest()
         try:
-            if download:
+            if download and not verify_checkpoint(target, manifest, self._model_progress, self._model_cancel):
                 download_checkpoint(target, manifest, self._model_progress, self._model_cancel)
-            else:
+            elif not download:
                 before = checkpoint_fingerprint(target) if target.is_file() else None
                 valid = verify_checkpoint(target, manifest, self._model_progress, self._model_cancel)
                 if not valid or before != checkpoint_fingerprint(target):
                     self._model_progress(stage='invalid' if target.exists() else 'missing')
                     return
+            if not audio_runtime.available():
+                if not download:
+                    self._model_progress(stage='tools_missing', received=0,
+                                         total=audio_runtime.manifest()['weights_bytes'])
+                    return
+                audio_runtime.install(self._model_progress, self._model_cancel)
             with self._lock:
                 self._model_fingerprint = checkpoint_fingerprint(target)
                 self._model.update(stage='ready', received=manifest['weights_bytes'], speed=0)

@@ -5,7 +5,7 @@ import struct
 import subprocess
 from pathlib import Path
 
-import imageio_ffmpeg
+from audio_runtime import get_ffmpeg_exe
 
 from audio_metadata import copy_metadata
 
@@ -87,7 +87,7 @@ def export_stem(directory: Path, title: str, *, codec="aac", destination=None, s
     temporary = destination / "container.partial.mp4"
     if output.exists() or temporary.exists():
         raise FileExistsError("Output container already exists")
-    command = [imageio_ffmpeg.get_ffmpeg_exe(), "-nostdin", "-hide_banner",
+    command = [get_ffmpeg_exe(), "-nostdin", "-hide_banner",
                "-loglevel", "error", "-n"]
     for name in ("master",) + STEMS:
         command += ["-i", str(directory / f"{name}.wav")]

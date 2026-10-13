@@ -1,4 +1,4 @@
-Bundled FFmpeg license and build information
+Upstream FFmpeg license and build information (acquired during setup, not bundled)
 
 Provider: https://www.gyan.dev/ffmpeg/builds/
 FFmpeg source: https://git.ffmpeg.org/ffmpeg.git

@@ -1,0 +1,8 @@
+{
+  "weights_url": "https://files.pythonhosted.org/packages/2c/c6/fa760e12a2483469e2bf5058c5faff664acf66cadb4df2ad6205b016a73d/imageio_ffmpeg-0.6.0-py3-none-win_amd64.whl",
+  "weights_bytes": 31246824,
+  "weights_sha256": "02fa47c83703c37df6bfe4896aab339013f62bf02c5ebf2dce6da56af04ffc0a",
+  "member": "imageio_ffmpeg/binaries/ffmpeg-win-x86_64-v7.1.exe",
+  "binary_bytes": 87638016,
+  "binary_sha256": "2ce797a0f88d7f067180338fb227f7b1928ea727bd9a4d7a1d022f7c52af71a3"
+}
