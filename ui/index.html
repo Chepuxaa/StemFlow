@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self'; img-src 'self' data:; connect-src 'self'">
+<title>StemFlow</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="window-bar">
+  <div class="window-drag pywebview-drag-region">
+    <img class="brand-logo" src="assets/logo.svg" width="147" height="32" alt="StemFlow" draggable="false"><span class="version">v1.0</span>
+  </div>
+  <div class="window-controls"><button id="window-minimize" class="minimize" title="Свернуть" aria-label="Свернуть"></button><button id="window-close" class="close" title="Закрыть" aria-label="Закрыть"></button></div>
+</header>
+<aside class="sidebar">
+  <nav aria-label="Разделы"><button id="nav-generator" class="nav-button active" aria-controls="generator" aria-current="page"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8v4m4-7v10m4-12v14m4-10v6m3-5v4"/></svg>Generator</button><button id="nav-settings" class="nav-button" aria-controls="settings"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14M7 3v4m6 1v4m-5 1v4"/></svg>Settings</button></nav>
+  <div class="device-card"><span class="gpu-tag">GPU</span><strong id="gpu-name">Видеокарта</strong><span id="gpu-memory">Локальная обработка</span><div class="device-bottom"><span id="gpu-status">Ожидание</span><svg viewBox="0 0 22 22" aria-hidden="true"><path d="M2 11h4l3-7 4 14 3-7h4"/></svg></div></div>
+</aside>
+<main>
+<section id="generator" class="page">
+  <div class="page-heading"><div><h1>Генератор стемов</h1><p class="heading-description">Четыре дорожки. Готовый файл для Traktor.</p></div><button id="open-root" class="button ghost">Результаты <span>↗</span></button></div>
+  <section id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Добавить аудиофайлы">
+    <div class="drop-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 22V5m-6 6 6-6 6 6M5 21v6h22v-6"/></svg></div>
+    <div class="drop-copy"><strong>Перетащи треки сюда</strong><span>MP3, WAV, FLAC и другие форматы</span></div>
+    <div class="drop-actions"><button id="add-folder" class="button ghost">Папка</button><button id="add-files" class="button ghost">Добавить <span>＋</span></button></div>
+  </section>
+  <section class="queue-panel" aria-label="Очередь обработки">
+    <div class="panel-heading"><div><h2>Очередь <span id="queue-count">0</span></h2><p id="queue-summary">Добавь первый трек, чтобы начать</p></div><button id="clear" class="text-button">Убрать завершённые</button></div>
+    <div id="empty" class="empty"><div class="empty-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><strong>Здесь будет твой плейлист</strong><p>Добавь треки. Остальное возьмёт на себя GPU.</p></div>
+    <div id="jobs" class="jobs" aria-live="polite"></div>
+    <div class="queue-footer"><span id="run-label">Готов к работе</span><div><button id="cancel" class="button stop" hidden>Остановить</button><button id="start" class="button accent" disabled>Запустить <span>→</span></button></div></div>
+  </section>
+  <div class="output-hint"><span><i class="dot orange-dot"></i> MelBand 4-stem v2</span><button id="destination-summary" class="text-button">Папка не выбрана</button></div>
+</section>
+<section id="settings" class="page" hidden>
+  <div class="page-heading"><div><h1>Настройки</h1><p class="heading-description">Разделение и экспорт</p></div><span class="local-label">Сохраняются автоматически</span></div>
+  <div class="settings-card">
+    <div class="setting-row"><label for="device"><strong>Устройство обработки</strong><span class="setting-help" id="device-help">Проверка CUDA… CPU доступен всегда.</span></label><select id="device"><option value="auto">Auto</option><option value="cuda" id="cuda-option" disabled>CUDA · проверка…</option><option value="cpu">CPU</option></select></div>
+    <div class="setting-row"><div><strong>Модель</strong><p>Вокал, барабаны, бас и остальные инструменты</p></div><span class="setting-value">MelBand 4-stem v2</span></div>
+    <div class="setting-row"><label for="chunk"><strong>Размер фрагмента</strong><span class="setting-help">6 секунд — меньше расход видеопамяти</span></label><select id="chunk"><option value="11">11 секунд</option><option value="6">6 секунд</option></select></div>
+    <label class="setting-row switch-row"><span><strong>Сохранять WAV</strong><span class="setting-help">Отдельные дорожки для монтажа и прослушивания</span></span><span class="toggle"><input id="keep-wavs" type="checkbox"><span class="switch"></span></span></label>
+  </div>
+  <div class="settings-card export-card"><div class="settings-title"><h2>Экспорт для Traktor</h2><span class="small-tag">.stem.mp4</span></div><div class="setting-row"><label for="output-mode"><strong>Сохранение файлов</strong><span class="setting-help" id="output-help">Готовые файлы в выбранной папке.</span></label><select id="output-mode"><option value="output">В выбранную папку</option><option value="replace">Заменить в исходной папке</option></select></div><div class="destination-row" id="destination-row"><div><span class="destination-label">Папка сохранения</span><span id="destination-path">Папка не выбрана</span></div><button id="choose-destination" class="button ghost">Выбрать</button></div><div class="export-details"><div><span>Мастер и стемы</span><strong>320 кбит/с</strong></div><div><span>Теги и обложка</span><strong>Из оригинала</strong></div><div><span>Нормализация</span><strong>Отключена</strong></div></div></div>
+  <div class="settings-card"><div class="setting-row"><label for="language"><strong>Язык интерфейса</strong></label><select id="language"><option value="ru">Русский · RU</option><option value="en">English · EN</option></select></div></div>
+</section>
+<footer><span class="author-credit"><span>Разработчик и дизайнер</span> <button id="open-author" class="author-link">@Chepuxaa</button></span><span id="notice" role="status">Подключение…</span></footer>
+</main>
+<script src="i18n.js"></script><script src="app.js"></script>
+</body></html>

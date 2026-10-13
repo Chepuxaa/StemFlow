@@ -1,0 +1,11 @@
+name: Source checks
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - run: python scripts/check_repository.py

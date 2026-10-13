@@ -1,0 +1,10 @@
+{
+  "repo": "SYH99999/MelBandRoformer4StemFTLarge",
+  "revision": "62371baf060e8205915b4e6e3f9459fc016b6dd1",
+  "weights_url": "https://huggingface.co/SYH99999/MelBandRoformer4StemFTLarge/resolve/62371baf060e8205915b4e6e3f9459fc016b6dd1/ver2.ckpt",
+  "weights_bytes": 3764030874,
+  "weights_sha256": "835ce9fa6651769c28ad5a2c87f9220b003a461d7d6c57ebe0898fff5479138c",
+  "config_sha256": "78e7b1da662fce6045fc5d8737e940e5f25c4c4045ca9e0458de1606a93df479",
+  "license": "Apache-2.0",
+  "code_revision": "84b1eac0887756b4f1a9d7a1ff49105939749ed2"
+}

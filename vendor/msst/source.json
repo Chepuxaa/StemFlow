@@ -1,0 +1,9 @@
+{
+  "revision": "84b1eac0887756b4f1a9d7a1ff49105939749ed2",
+  "repository": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/84b1eac0887756b4f1a9d7a1ff49105939749ed2/",
+  "files": {
+    "models/bs_roformer/attend.py": "c7abbc40a3fd20ff7f6001fa9f8ee9ad5df6452272712a5e719b8f8468bf2223",
+    "LICENSE": "3282dc057695ef5b9a64909a7092ca40b2c292c232580fc6ace6e5d665cc0207",
+    "models/bs_roformer/mel_band_roformer.py": "3b4a57ab268933900172e05fb76dd9e8acc1eb770c745d583a4e42b94b79ec15"
+  }
+}
