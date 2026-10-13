@@ -87,3 +87,14 @@ select{border:1px solid #444;border-radius:5px;background:#222;color:#ddd;paddin
 .toggle input:checked+.switch{background:var(--accent)}.toggle input:checked+.switch:before{background:#fff;transform:translateX(16px)}.toggle input:focus-visible+.switch{outline:2px solid var(--accent);outline-offset:3px}.setting-row:has(input:disabled){opacity:.5}
 .export-details{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:16px 0}.export-details>div{display:flex;flex-direction:column;gap:8px;font-size:11px;color:#999}.export-details strong{font-size:12px;color:#ccc;font-weight:400}
 @media(max-height:560px){main{padding-top:16px}.settings-title{padding:12px 0}.setting-row{padding:12px 0}.settings-card{margin-bottom:12px}}
+.model-setup{position:fixed;inset:48px 0 0 168px;z-index:20;background:#101010f5;display:flex;align-items:center;justify-content:center;padding:24px}
+.model-card{width:440px;max-width:100%;padding:24px;border:1px solid #34302c;border-radius:12px;background:linear-gradient(145deg,#211811 0,#161616 42%);box-shadow:0 20px 60px #0005}
+.model-card-top{display:flex;align-items:center;justify-content:space-between;gap:16px}.model-card-top select{padding:5px 8px;font-size:11px}
+.model-symbol{display:grid;place-items:center;width:48px;height:48px;border-radius:10px;margin:24px 0 16px;background:#ff540016;color:#ff874d}
+.model-symbol svg{width:32px;height:32px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.model-card h2{font-size:20px;line-height:26px;font-weight:500;letter-spacing:-.3px}
+#model-description{min-height:36px;color:#a3a3a3;line-height:18px;font-size:12px;margin:8px 0 20px}
+.model-progress{height:6px;border-radius:4px;background:#303030;overflow:hidden}.model-progress span{display:block;height:100%;background:linear-gradient(90deg,#ff5400,#ff9654);border-radius:4px;transition:width .3s}
+.model-metrics{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#999;margin-top:10px;min-height:14px}.model-metrics strong{font-weight:500;color:#ddd}
+.model-buttons{display:flex;justify-content:flex-end;gap:8px;margin-top:22px}.model-error{color:#ffad8c;font-size:11px;line-height:16px;overflow-wrap:anywhere;max-height:64px;overflow:auto}
+.model-note{color:#777;font-size:10px;line-height:16px;margin:16px 0 0}

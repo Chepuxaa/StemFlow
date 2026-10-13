@@ -36,10 +36,37 @@ function rowFor(job) {
 function action(container, text, title, callback) {
   const button = document.createElement('button'); button.textContent = text; button.title = title; button.setAttribute('aria-label', title); button.onclick = callback; container.appendChild(button);
 }
+function renderModel(model) {
+  if (!model) return;
+  $('model-setup').hidden = model.stage === 'ready';
+  $('model-language').value = language;
+  const active = model.active;
+  const checking = ['checking','verifying'].includes(model.stage);
+  const percent = Math.max(0, Math.min(100, 100 * model.received / model.total));
+  $('model-title').textContent = t('model_' + model.stage);
+  $('model-description').textContent = t(checking ? 'modelCheckHelp' : model.stage === 'downloading' ? 'modelDownloadHelp' : 'modelSetupHelp');
+  $('model-progress').hidden = !active;
+  $('model-progress').setAttribute('aria-label', t('modelPreparation'));
+  $('model-progress').setAttribute('aria-valuenow', Math.floor(percent));
+  $('model-progress-fill').style.width = percent + '%';
+  $('model-transfer').textContent = active ? `${(model.received / 1e9).toFixed(2)} / ${(model.total / 1e9).toFixed(2)} GB` + (model.speed ? ` · ${(model.speed / 1e6).toFixed(1)} MB/s` : '') : `${(model.total / 1e9).toFixed(2)} GB`;
+  $('model-percent').textContent = active ? Math.floor(percent) + '%' : '';
+  $('model-error').hidden = !model.error;
+  $('model-error').textContent = model.error || '';
+  $('model-download').hidden = active || model.stage === 'ready';
+  $('model-download').textContent = t(model.stage === 'invalid' ? 'modelRepair' : 'modelDownload');
+  $('model-check').hidden = active || model.stage === 'missing' || model.stage === 'ready';
+  $('model-check').textContent = t('modelRecheck');
+  $('model-cancel').hidden = !active;
+  $('model-cancel').disabled = model.cancelling;
+  $('model-cancel').textContent = t(model.cancelling ? 'modelCancelling' : 'modelCancel');
+  $('model-note').textContent = t('modelPrivacy');
+}
 function render(state) {
   const nextLanguage = state.settings.language || 'en';
   if (nextLanguage !== language) applyLanguage(nextLanguage);
   $('language').value = language;
+  renderModel(state.model);
   const pending = state.jobs.filter(job => job.status === 'pending').length;
   const done = state.jobs.filter(job => job.status === 'done').length;
   const failures = state.jobs.filter(job => job.status === 'failed').length;
@@ -48,7 +75,7 @@ function render(state) {
   $('empty').hidden = !!state.jobs.length;
   $('start').hidden = state.busy;
   const needsDestination = (state.settings.output_mode || 'output') !== 'replace' && !state.settings.output_directory;
-  $('start').disabled = !pending || needsDestination || (cudaAvailable === null && state.settings.device !== 'cpu');
+  $('start').disabled = state.model?.stage !== 'ready' || !pending || needsDestination || (cudaAvailable === null && state.settings.device !== 'cpu');
   $('cancel').hidden = !state.busy; $('cancel').disabled = state.stopping;
   $('cancel').textContent = state.stopping ? t('stopping') : t('stop');
   const running = state.jobs.find(job => job.status === 'running');
@@ -141,9 +168,14 @@ $('destination-summary').onclick = () => {
   if ($('output-mode').value !== 'replace') call('choose_output_directory');
 };
 $('language').onchange = () => call('set_language',$('language').value);
+$('model-language').onchange = () => call('set_language',$('model-language').value);
+$('model-download').onclick = () => call('download_model');
+$('model-check').onclick = () => call('check_model');
+$('model-cancel').onclick = () => call('cancel_model');
 window.addEventListener('pywebviewready', async () => {
   connected = true;
   await call('get_state');
+  setInterval(async () => { if (!polling) { polling = true; try { await call('get_state'); } finally { polling = false; } } },500);
   const device = await call('get_device_info');
   if (device) {
     hardware = device;
@@ -151,5 +183,4 @@ window.addEventListener('pywebviewready', async () => {
     $('cuda-option').disabled = !cudaAvailable;
     await call('get_state');
   }
-  setInterval(async () => { if (!polling) { polling = true; try { await call('get_state'); } finally { polling = false; } } },500);
 });

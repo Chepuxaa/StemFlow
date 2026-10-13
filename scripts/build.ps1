@@ -8,7 +8,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Build dependency installation failed.' }
     & $pythonPath scripts/check_repository.py
     if ($LASTEXITCODE -ne 0) { throw 'Repository validation failed.' }
-    & $pythonPath -m PyInstaller --noconfirm packaging/stemflow.spec
+    & $pythonPath -m PyInstaller --clean --noconfirm packaging/stemflow.spec
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     & $pythonPath scripts/prepare_release.py
     if ($LASTEXITCODE -ne 0) { throw 'Release preparation failed.' }

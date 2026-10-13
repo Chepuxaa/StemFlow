@@ -3,6 +3,8 @@
 The first EXE bundle was built and checked on the development Windows machine:
 native window startup, device probing, CUDA/CPU exports, Auto with CUDA hidden,
 queued tracks, model reuse, error continuation and worker cancellation.
+Model setup was also exercised in the native GUI using a local test download:
+RU/EN, download progress, cancellation, retry and verified completion.
 It is an alpha build; clean-machine validation is still required before a broad release.
 
 ## Build
@@ -20,7 +22,9 @@ PyTorch runtime each time its worker starts, so the initial recipe uses onedir.
 The build script adds `Download-model.cmd`, first-run instructions and available
 dependency license texts. Keep these files in the distributed folder too.
 
-Model weights are not embedded. The intended packaged setup is:
+Model weights are not embedded. Open `StemFlow.exe`: its first-run screen checks
+the checkpoint and offers a download with progress, speed and cancellation.
+SHA-256 verification completes before processing can start. The optional CLI setup is:
 
 ```powershell
 .\StemFlow-worker.exe --download-model
@@ -29,6 +33,12 @@ Model weights are not embedded. The intended packaged setup is:
 
 The model is stored in `%LOCALAPPDATA%\StemFlow\models`. Resource assets are
 read from the bundle; settings, reports and scratch audio remain outside it.
+
+For local model-download regression tests (no real weights or internet required):
+
+```powershell
+.\.venv\Scripts\python.exe scripts/test_model_download.py
+```
 
 ## Before publishing a binary
 

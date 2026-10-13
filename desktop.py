@@ -19,7 +19,9 @@ from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
 from webview.dom import DOMEventHandler
 from file_output import BACKUP_FOLDER
-from app_paths import DATA_DIR, RESOURCE_DIR, cleanup_run_directory, worker_command
+from app_paths import DATA_DIR, MODEL_DIR, RESOURCE_DIR, cleanup_run_directory, worker_command
+from scripts.download_model import (DownloadCancelled, checkpoint_fingerprint,
+                                    download_checkpoint, model_manifest, verify_checkpoint)
 
 ROOT = RESOURCE_DIR
 EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a", ".mp4", ".aif", ".aiff", ".ogg", ".opus"}
@@ -39,6 +41,11 @@ class DesktopAPI:
         self._covers = {}
         self._settings = {"keep_wavs": False, "chunk_seconds": 11, "device": "auto", "language": "en", "output_mode": "output", "output_directory": ""}
         self._notice = ""
+        self._model_cancel = threading.Event()
+        self._model_thread = None
+        self._model_fingerprint = None
+        self._model = {'stage': 'checking', 'received': 0, 'total': model_manifest()['weights_bytes'],
+                       'speed': 0, 'error': '', 'active': False, 'cancelling': False}
         saved_file = self._state_file
         if state_file is None and not saved_file.exists() and (ROOT / '.cache/queue.json').exists():
             saved_file = ROOT / '.cache/queue.json'
@@ -72,7 +79,68 @@ class DesktopAPI:
         with self._lock:
             return copy.deepcopy({"jobs": self._jobs, "settings": self._settings,
                                   "busy": self._busy, "stopping": self._stop.is_set() and self._busy,
-                                  "notice": self._translated_notice()})
+                                  "notice": self._translated_notice(), "model": self._model})
+
+    def _model_progress(self, **event):
+        with self._lock:
+            self._model.update(event)
+
+    def _start_model_task(self, download=False):
+        with self._lock:
+            if self._busy or self._model['active']:
+                return self.get_state()
+            self._model_cancel.clear()
+            self._model_fingerprint = None
+            self._model.update(stage='downloading' if download else 'checking', received=0,
+                               speed=0, error='', active=True, cancelling=False)
+            # Let cancellation finish cleaning its partial file when the window closes.
+            self._model_thread = threading.Thread(target=self._run_model_task, args=(download,), daemon=False)
+            self._model_thread.start()
+        return self.get_state()
+
+    def _run_model_task(self, download):
+        target = MODEL_DIR / 'ver2.ckpt'
+        manifest = model_manifest()
+        try:
+            if download:
+                download_checkpoint(target, manifest, self._model_progress, self._model_cancel)
+            else:
+                before = checkpoint_fingerprint(target) if target.is_file() else None
+                valid = verify_checkpoint(target, manifest, self._model_progress, self._model_cancel)
+                if not valid or before != checkpoint_fingerprint(target):
+                    self._model_progress(stage='invalid' if target.exists() else 'missing')
+                    return
+            with self._lock:
+                self._model_fingerprint = checkpoint_fingerprint(target)
+                self._model.update(stage='ready', received=manifest['weights_bytes'], speed=0)
+        except DownloadCancelled:
+            self._model_progress(stage='cancelled', speed=0)
+        except Exception as exc:
+            self._model_progress(stage='cancelled' if self._model_cancel.is_set() else 'failed',
+                                 error='' if self._model_cancel.is_set() else str(exc), speed=0)
+        finally:
+            self._model_progress(active=False, cancelling=False)
+
+    def check_model(self):
+        return self._start_model_task()
+
+    def download_model(self):
+        with self._lock:
+            if self._model['stage'] == 'ready':
+                return self.get_state()
+        return self._start_model_task(download=True)
+
+    def cancel_model(self):
+        with self._lock:
+            if self._model['active']:
+                self._model_cancel.set()
+                self._model['cancelling'] = True
+        return self.get_state()
+
+    def shutdown(self):
+        self.cancel_model()
+        if self.get_state()['busy']:
+            self.cancel()
 
     def _translated_notice(self):
         if self._settings['language'] == 'ru':
@@ -191,6 +259,14 @@ class DesktopAPI:
 
     def start(self):
         with self._lock:
+            try:
+                model_ready = self._model['stage'] == 'ready' and self._model_fingerprint == checkpoint_fingerprint(MODEL_DIR / 'ver2.ckpt')
+            except OSError:
+                model_ready = False
+            if not model_ready:
+                if not self._model['active'] and self._model['stage'] == 'ready':
+                    self.check_model()
+                return self.get_state()
             if self._busy or not any(job["status"] == "pending" for job in self._jobs):
                 return self.get_state()
             if self._settings['output_mode'] != 'replace' and not self._settings['output_directory']:
@@ -425,7 +501,7 @@ def create_app_window(api):
                                   frameless=True, easy_drag=False, shadow=True,
                                   background_color="#101010")
     api._window = window
-    window.events.closing += lambda: api.cancel() if api.get_state()["busy"] else None
+    window.events.closing += api.shutdown
     return window
 
 
@@ -436,6 +512,7 @@ def main():
     window = create_app_window(api)
 
     def loaded():
+        api.check_model()
         zone = window.dom.get_element("#dropzone")
         def dropped(event):
             paths = [item["pywebviewFullPath"] for item in event.get("dataTransfer", {}).get("files", [])

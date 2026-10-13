@@ -17,6 +17,18 @@
   <div class="device-card"><span class="gpu-tag">GPU</span><strong id="gpu-name">Видеокарта</strong><span id="gpu-memory">Локальная обработка</span><div class="device-bottom"><span id="gpu-status">Ожидание</span><svg viewBox="0 0 22 22" aria-hidden="true"><path d="M2 11h4l3-7 4 14 3-7h4"/></svg></div></div>
 </aside>
 <main>
+<div id="model-setup" class="model-setup" role="dialog" aria-modal="true" aria-labelledby="model-title">
+  <section class="model-card">
+    <div class="model-card-top"><span class="small-tag">MelBand 4-stem v2</span><select id="model-language" aria-label="Interface language"><option value="en">EN</option><option value="ru">RU</option></select></div>
+    <div class="model-symbol" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 13v6m6-12v18m5-22v26m5-20v14m6-10v6"/></svg></div>
+    <h2 id="model-title">Checking model</h2><p id="model-description"></p>
+    <div id="model-progress" class="model-progress" role="progressbar" aria-label="Model preparation" aria-valuemin="0" aria-valuemax="100"><span id="model-progress-fill"></span></div>
+    <div class="model-metrics"><span id="model-transfer"></span><strong id="model-percent"></strong></div>
+    <p id="model-error" class="model-error" role="alert" hidden></p>
+    <div class="model-buttons"><button id="model-check" class="button ghost" hidden></button><button id="model-download" class="button accent" hidden></button><button id="model-cancel" class="button ghost" hidden></button></div>
+    <p id="model-note" class="model-note"></p>
+  </section>
+</div>
 <section id="generator" class="page">
   <div class="page-heading"><div><h1>Генератор стемов</h1><p class="heading-description">Четыре дорожки. Готовый файл для Traktor.</p></div><button id="open-root" class="button ghost">Результаты <span>↗</span></button></div>
   <section id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Добавить аудиофайлы">

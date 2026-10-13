@@ -67,7 +67,7 @@ SHA-256 before installing the checkpoint.
 - Source checkout: `models/melband-4stem-syh-v2/ver2.ckpt`.
 - The model configuration and download manifest are versioned in `config/`.
 - An existing checkpoint is verified and reused.
-- The GUI does **not** download the model automatically.
+- The GUI checks model integrity at startup and offers an in-app download with progress, speed and cancellation when weights are missing or invalid.
 - Once dependencies and weights are installed, track processing needs no network access.
 
 Verify an existing download without downloading anything:
@@ -135,7 +135,7 @@ instead of `--output-dir`.
 | Finished stems | Your selected destination |
 | Retained WAVs | `<track>-stems` beside the finished file |
 | Model weights in source mode | `models/melband-4stem-syh-v2` |
-| Model weights in the planned EXE build | `%LOCALAPPDATA%\StemFlow\models\melband-4stem-syh-v2` |
+| Model weights in the EXE build | `%LOCALAPPDATA%\StemFlow\models\melband-4stem-syh-v2` |
 
 ## Development and Windows EXE
 
@@ -152,7 +152,7 @@ installation and with more real-world tracks. A public binary release is not yet
 
 The bundle contains `StemFlow.exe`, `StemFlow-worker.exe` and a shared `_internal`
 directory. Extract and keep the entire folder together; Python is included.
-Run `Download-model.cmd` once, then open `StemFlow.exe`.
+Open `StemFlow.exe`. The application checks the model and offers a download if needed; no separate script is required. `Download-model.cmd` remains an optional CLI alternative.
 
 The binary setup can also be run from PowerShell:
 

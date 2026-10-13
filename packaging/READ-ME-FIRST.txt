@@ -1,8 +1,9 @@
 StemFlow for Windows x64 - alpha build
 
 1. Extract the entire ZIP. Keep StemFlow.exe, StemFlow-worker.exe and _internal together.
-2. Run Download-model.cmd once. It downloads and verifies the 3.76 GB model.
-3. Open StemFlow.exe, choose a save folder and add tracks.
+2. Open StemFlow.exe. It checks the model and offers a 3.76 GB download if needed.
+   Download progress, speed, integrity verification and cancellation are built in.
+3. Choose a save folder and add tracks. Download-model.cmd is an optional CLI alternative.
 
 Python is included in the application bundle. The GUI requires Microsoft Edge
 WebView2 Runtime. CUDA requires a compatible NVIDIA driver; CPU mode is available.
