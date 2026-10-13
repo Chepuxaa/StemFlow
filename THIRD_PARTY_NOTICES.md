@@ -13,8 +13,14 @@ code, assets, model weights and bundled runtime components retain their licenses
 Python dependencies are installed separately and listed in `requirements/app.lock.txt`.
 When distributing an EXE bundle, retain license notices for Python, PyTorch,
 pywebview, pythonnet, NumPy, SciPy, librosa and the other bundled packages.
-The FFmpeg executable supplied by imageio-ffmpeg has its own licensing terms;
-see [imageio-ffmpeg's licensing information](https://github.com/imageio/imageio-ffmpeg#license).
+The bundled imageio-ffmpeg executable is FFmpeg 7.1 essentials from Gyan, built
+with `--enable-gpl --enable-version3`, and declares GPL version 3 or later.
+Its license text and build information are in `packaging/licenses`, copied to
+`THIRD_PARTY_LICENSES/FFmpeg` in the Windows bundle. See
+[FFmpeg licensing](https://ffmpeg.org/legal.html) and the
+[Windows build provider](https://www.gyan.dev/ffmpeg/builds/).
+Public binary distribution must also provide the corresponding FFmpeg source
+under its license; a link to the provider alone does not fulfill that requirement.
 Review the actual contents of the built distribution before a public binary release.
 
 StemFlow is an independent project and is not affiliated with Native Instruments.

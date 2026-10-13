@@ -1,7 +1,9 @@
 # Windows EXE build — experimental
 
-The source application is tested. The EXE recipe is a starting point;
-the packaged application has not been built and release-tested yet.
+The first EXE bundle was built and checked on the development Windows machine:
+native window startup, device probing, CUDA/CPU exports, Auto with CUDA hidden,
+queued tracks, model reuse, error continuation and worker cancellation.
+It is an alpha build; clean-machine validation is still required before a broad release.
 
 ## Build
 
@@ -15,6 +17,8 @@ The script installs PyInstaller in `.venv` and produces `dist/StemFlow/`.
 Keep the entire folder together: `StemFlow.exe`, `StemFlow-worker.exe`, and
 their shared `_internal` runtime. A single-file bundle would unpack a large
 PyTorch runtime each time its worker starts, so the initial recipe uses onedir.
+The build script adds `Download-model.cmd`, first-run instructions and available
+dependency license texts. Keep these files in the distributed folder too.
 
 Model weights are not embedded. The intended packaged setup is:
 

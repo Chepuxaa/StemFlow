@@ -140,9 +140,13 @@ Music/
 `StemFlow-worker.exe --download-model` и храниться в
 `%LOCALAPPDATA%\StemFlow\models\melband-4stem-syh-v2`.
 
-Подготовлена **экспериментальная** сборка PyInstaller: `StemFlow.exe` и отдельный
-`StemFlow-worker.exe` в общей папке. Готовый EXE ещё не собран и не прошёл
-проверку релиза. Для обычного использования сейчас запускай исходники.
+Первая **альфа-сборка Windows** создана и проверена на компьютере разработчика:
+запуск GUI, разделение на CUDA и CPU, Auto без CUDA, очередь, переиспользование
+модели и отмена обработчика. Проверка на чистой Windows и большем наборе треков
+ещё нужна. Публичный бинарный релиз пока не опубликован.
+
+Распакуй всю папку с `StemFlow.exe`, `StemFlow-worker.exe` и `_internal`.
+Python уже включён. Один раз запусти `Download-model.cmd`, затем `StemFlow.exe`.
 
 ```text
 stemflow.py           входная точка GUI / worker
@@ -163,6 +167,8 @@ packaging/            рецепт PyInstaller
 ## Лицензия и благодарности
 
 Разработчик и дизайнер: **[@Chepuxaa](https://github.com/Chepuxaa)**.
+
+Разработано при содействии **OpenAI Codex**.
 
 Оригинальный код — [MIT](LICENSE). Сторонние компоненты и веса сохраняют свои
 лицензии: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

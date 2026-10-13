@@ -10,5 +10,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Repository validation failed.' }
     & $pythonPath -m PyInstaller --noconfirm packaging/stemflow.spec
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
+    & $pythonPath scripts/prepare_release.py
+    if ($LASTEXITCODE -ne 0) { throw 'Release preparation failed.' }
     Write-Host 'Build created in dist\StemFlow. Release testing is still required.'
 } finally { Pop-Location }

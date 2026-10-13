@@ -145,11 +145,16 @@ instead of `--output-dir`.
 
 [Contributing](CONTRIBUTING.md) · [Windows build instructions](docs/build.md)
 
-An **experimental** PyInstaller recipe creates `StemFlow.exe` and a separate
-`StemFlow-worker.exe` sharing one runtime directory. A packaged EXE has **not**
-yet been built and release-tested. Use the source setup above for now.
+The first **alpha Windows build** has been created and checked on the development
+PC: GUI startup, CUDA/CPU separation, Auto fallback without CUDA, queue processing,
+model reuse and worker cancellation. It still needs testing on a clean Windows
+installation and with more real-world tracks. A public binary release is not yet published.
 
-The intended binary setup will be:
+The bundle contains `StemFlow.exe`, `StemFlow-worker.exe` and a shared `_internal`
+directory. Extract and keep the entire folder together; Python is included.
+Run `Download-model.cmd` once, then open `StemFlow.exe`.
+
+The binary setup can also be run from PowerShell:
 
 ```powershell
 .\StemFlow-worker.exe --download-model
@@ -177,6 +182,8 @@ packaging/            PyInstaller recipe
 ## License and credits
 
 Developer and designer: **[@Chepuxaa](https://github.com/Chepuxaa)**.
+
+Built with assistance from **OpenAI Codex**.
 
 Original code is [MIT-licensed](LICENSE). Third-party components and model weights
 retain their own licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -1,0 +1,18 @@
+StemFlow for Windows x64 - alpha build
+
+1. Extract the entire ZIP. Keep StemFlow.exe, StemFlow-worker.exe and _internal together.
+2. Run Download-model.cmd once. It downloads and verifies the 3.76 GB model.
+3. Open StemFlow.exe, choose a save folder and add tracks.
+
+Python is included in the application bundle. The GUI requires Microsoft Edge
+WebView2 Runtime. CUDA requires a compatible NVIDIA driver; CPU mode is available.
+Settings, model weights and reports are stored in %LOCALAPPDATA%\StemFlow.
+Do not copy only the EXE: its _internal runtime is required.
+
+Source and instructions: https://github.com/Chepuxaa/StemFlow
+Developer and designer: @Chepuxaa
+Built with assistance from OpenAI Codex.
+
+This alpha was checked on the development Windows PC: GUI startup, CUDA/CPU
+separation, CPU fallback, queued tracks and model reuse. It still needs testing
+on a clean Windows installation and with your own music in Traktor.
